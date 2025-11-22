@@ -1,0 +1,17 @@
+<svg
+  width="120"
+  height="30"
+  viewBox="0 0 120 30"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <text
+    x="0"
+    y="22"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="28"
+    font-style="italic"
+    fill="black"
+  >
+    CutWave
+  </text>
+</svg>
