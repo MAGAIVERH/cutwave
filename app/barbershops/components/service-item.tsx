@@ -32,7 +32,7 @@ const ServiceItem = ({ service }: ServiceItemProps) => {
         </p>
       </div>
 
-      {/* BOTÃO – NÃO FAZ NADA */}
+      {/* BOTÃO – NÃO FAZ NADA POR ENQUANTO */}
       <Button variant="default">Reservar</Button>
     </div>
   );

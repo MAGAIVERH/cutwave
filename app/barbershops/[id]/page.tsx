@@ -13,9 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import Footer from "@/app/components/footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// -------------------------------
 // 📌 ROTA DINÂMICA CORRETA
-// -------------------------------
+
 const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
   // params é Promise → precisa de await
   const { id } = await props.params;
@@ -27,9 +26,8 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
     },
   });
 
-  // --------------------------------
   // 📌 BARBEARIA NÃO ENCONTRADA
-  // --------------------------------
+
   if (!barbershop) {
     return (
       <PageContainer>
@@ -38,13 +36,12 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
     );
   }
 
-  // --------------------------------
   // 📌 PÁGINA PRINCIPAL
-  // --------------------------------
+
   return (
     <main>
-      {/* TOP IMAGE ----------------------------------------------------- */}
-      <div className="relative h-64 w-full">
+      {/* TOP IMAGE  */}
+      <div className="relative h-64 w-full overflow-hidden rounded-b-2xl">
         <Link
           href="/"
           className="bg-background/80 absolute top-4 left-4 z-20 rounded-full p-2 backdrop-blur-md"
@@ -61,7 +58,7 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
       </div>
 
       <PageContainer>
-        {/* TÍTULO -------------------------------------------------------- */}
+        {/* TÍTULO --- */}
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={barbershop.imageUrl} alt={barbershop.name} />
@@ -78,7 +75,7 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
           </div>
         </div>
         <Separator />
-        {/* SOBRE NÓS ----------------------------------------------------- */}
+        {/* SOBRE NÓS  */}
         <PageSection>
           <PageSectionTitle>Sobre nós</PageSectionTitle>
           <p className="text-muted-foreground text-sm leading-relaxed">
@@ -87,7 +84,7 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
         </PageSection>
         <Separator />
 
-        {/* SERVIÇOS ----------------------------------------------------- */}
+        {/* SERVIÇOS  */}
         <PageSection>
           <PageSectionTitle>Serviços</PageSectionTitle>
 
@@ -98,7 +95,7 @@ const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
           </div>
         </PageSection>
 
-        {/* CONTATO ----------------------------------------------------- */}
+        {/* CONTATO */}
         <PageSection>
           <PageSectionTitle>Contato</PageSectionTitle>
 
