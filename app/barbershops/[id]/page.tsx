@@ -12,17 +12,37 @@ import ServiceItem from "../components/service-item";
 import { Separator } from "@/components/ui/separator";
 import Footer from "@/app/components/footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { notFound } from "next/navigation";
 
-// 📌 ROTA DINÂMICA CORRETA
+type BarbershopPageProps = {
+  params: {
+    id: string;
+  };
+};
 
-const BarbershopPage = async (props: PageProps<"/barbershops/[id]">) => {
-  // params é Promise → precisa de await
-  const { id } = await props.params;
+const BarbershopPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
+
+  if (!id) {
+    notFound(); // ✅ FINALIZA render corretamente
+  }
 
   const barbershop = await prisma.barbershop.findUnique({
     where: { id },
     include: {
-      services: true,
+      services: {
+        include: {
+          barbershop: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 

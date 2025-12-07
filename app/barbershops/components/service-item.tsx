@@ -1,12 +1,20 @@
+"use client";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { BarbershopService } from "@prisma/client";
+import { useState } from "react";
+import { ReserveSheet } from "@/app/components/reserve-sheet";
 
 interface ServiceItemProps {
-  service: BarbershopService;
+  service: BarbershopService & {
+    barbershop: {
+      name: string;
+    };
+  };
 }
 
 const ServiceItem = ({ service }: ServiceItemProps) => {
+  const [open, setOpen] = useState(false);
   return (
     <div className="bg-card border-border flex items-center gap-4 rounded-xl border p-4">
       {/* IMAGEM DO SERVIÇO */}
@@ -32,8 +40,20 @@ const ServiceItem = ({ service }: ServiceItemProps) => {
         </p>
       </div>
 
-      {/* BOTÃO – NÃO FAZ NADA POR ENQUANTO */}
-      <Button variant="default">Reservar</Button>
+      {/* BOTÃO – ABRI SHEET DE SERVA DE HORARIOS */}
+      <Button variant="default" onClick={() => setOpen(true)}>
+        Reservar
+      </Button>
+
+      <ReserveSheet
+        open={open}
+        onOpenChange={setOpen}
+        serviceId={service.id}
+        barbershopId={service.barbershopId}
+        serviceName={service.name}
+        servicePrice={service.priceInCents}
+        barbershopName={service.barbershop.name}
+      />
     </div>
   );
 };
