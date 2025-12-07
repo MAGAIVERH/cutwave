@@ -4,6 +4,7 @@ import Image from "next/image";
 import { LogInIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useAuthUI } from "../context/auth-ui-context";
 
 type AuthSectionProps = {
   session: any;
@@ -11,6 +12,7 @@ type AuthSectionProps = {
 };
 
 const AuthSection = ({ session, isPending }: AuthSectionProps) => {
+  const { closeAuthSheet } = useAuthUI();
   if (isPending) {
     return <p className="text-muted-foreground text-sm">Carregando...</p>;
   }
@@ -25,7 +27,16 @@ const AuthSection = ({ session, isPending }: AuthSectionProps) => {
         <Button
           className="rounded-2xl"
           size="sm"
-          onClick={() => authClient.signIn.social({ provider: "google" })}
+          onClick={() => {
+            const redirect = localStorage.getItem("redirectAfterLogin") ?? "/";
+
+            localStorage.removeItem("redirectAfterLogin");
+
+            authClient.signIn.social({
+              provider: "google",
+              callbackURL: redirect,
+            });
+          }}
         >
           Login <LogInIcon />
         </Button>

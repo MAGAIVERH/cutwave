@@ -10,6 +10,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ReserveSheetProps = {
   open: boolean;
@@ -59,6 +68,16 @@ export const ReserveSheet = ({
 
   // ▶ horários já ocupados vindos do backend
   const [bookedHours, setBookedHours] = useState<string[]>([]);
+
+  // ▶ info de conflito global (outro agendamento do mesmo usuário)
+  const [conflictInfo, setConflictInfo] = useState<null | {
+    barbershopName?: string;
+    serviceName?: string;
+    date?: string;
+  }>(null);
+
+  // ▶ controla abertura do AlertDialog
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
 
   /* HANDLERS */
 
@@ -152,21 +171,26 @@ export const ReserveSheet = ({
     });
 
     if (!response.ok) {
+      // 👉 se o backend disser que é conflito de agendamento do usuário
+      if (response.status === 409) {
+        const data = await response.json();
+
+        if (data?.error === "USER_BOOKING_CONFLICT") {
+          setConflictInfo(data.conflict);
+          setIsConflictDialogOpen(true);
+          // não precisa alert() aqui
+          return;
+        }
+      }
+
+      // fallback genérico para outros erros (ex: horário ocupado na barbearia)
       alert("Esse horário já está ocupado.");
-
-      // 🔁 atualiza lista de horários ocupados
-      const dateISO = selectedDate.toISOString().split("T")[0];
-
-      const res = await fetch(
-        `/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&date=${dateISO}`,
-      );
-
-      const data: string[] = await res.json();
-      setBookedHours(data);
       setSelectedHour(null);
-
       return;
     }
+
+    // se chegou aqui, reserva foi criada com sucesso
+    // (se eu quiser, pode fechar o sheet ou mostrar toast aqui depois)
   };
 
   return (
@@ -277,6 +301,48 @@ export const ReserveSheet = ({
           </Button>
         </div>
       </SheetContent>
+
+      {/* ALERTA DE CONFLITO DE AGENDAMENTO */}
+      <AlertDialog
+        open={isConflictDialogOpen}
+        onOpenChange={setIsConflictDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você já possui um agendamento</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Você já tem um serviço agendado nesse mesmo horário.</p>
+
+              {conflictInfo && (
+                <div className="bg-muted space-y-1 rounded-lg p-3 text-sm">
+                  {conflictInfo.barbershopName && (
+                    <p>
+                      <span className="font-semibold">Barbearia: </span>
+                      {conflictInfo.barbershopName}
+                    </p>
+                  )}
+                  {conflictInfo.serviceName && (
+                    <p>
+                      <span className="font-semibold">Serviço: </span>
+                      {conflictInfo.serviceName}
+                    </p>
+                  )}
+                  {conflictInfo.date && (
+                    <p>
+                      <span className="font-semibold">Data: </span>
+                      {new Date(conflictInfo.date).toLocaleString("pt-BR")}
+                    </p>
+                  )}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogAction>Entendi</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 };

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
 import {
   PageContainer,
   PageSection,
@@ -12,7 +13,6 @@ import ServiceItem from "../components/service-item";
 import { Separator } from "@/components/ui/separator";
 import Footer from "@/app/components/footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { notFound } from "next/navigation";
 
 type BarbershopPageProps = {
   params: {
