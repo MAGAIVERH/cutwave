@@ -34,6 +34,7 @@ import AuthSection from "../authentication/AuthSection";
 
 // ✅ CONTEXTO (novo)
 import { useAuthUI } from "@/app/context/auth-ui-context";
+import Link from "next/link";
 
 const Header = () => {
   const { data: session, isPending } = authClient.useSession();
@@ -73,15 +74,23 @@ const Header = () => {
             {/* MENU */}
             <PageSection>
               <nav className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
+                <Link
+                  href="/"
+                  onClick={() => setOpen(false)}
+                  className="hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+                >
                   <Home className="h-4 w-4" />
-                  Início
-                </div>
+                  <span>Início</span>
+                </Link>
 
-                <div className="flex items-center gap-2">
+                <Link
+                  href="/appointments"
+                  onClick={() => setOpen(false)}
+                  className="hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+                >
                   <Calendar className="h-4 w-4" />
-                  Agendamentos
-                </div>
+                  <span>Agendamentos</span>
+                </Link>
               </nav>
             </PageSection>
 

@@ -12,6 +12,8 @@ import {
   PageSectionScroller,
   PageSectionTitle,
 } from "@/components/ui/page";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const Home = async () => {
   const recomendedBarbershops = await prisma.barbershop.findMany({
@@ -24,6 +26,31 @@ const Home = async () => {
       name: "desc",
     },
   });
+  const session = await auth.api.getSession({
+    headers: new Headers(await headers()),
+  });
+
+  const bookings = session?.user?.id
+    ? await prisma.booking.findMany({
+        where: {
+          userId: session.user.id,
+          cancelled: false,
+        },
+        include: {
+          service: { select: { name: true } },
+          barbershop: {
+            select: {
+              name: true,
+              imageUrl: true,
+            },
+          },
+        },
+        orderBy: {
+          date: "desc",
+        },
+        take: 5,
+      })
+    : [];
   return (
     <main>
       <Header />
@@ -39,15 +66,17 @@ const Home = async () => {
           />
         </div>
 
-        <PageSection>
-          <PageSectionTitle>Agendamentos</PageSectionTitle>
-          <BookingItem
-            serviceName="Corte de cabelo"
-            barbershopName="Barbearia do joao"
-            barbershopImageUrl="https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png"
-            date={new Date()}
-          />
-        </PageSection>
+        {bookings.length > 0 && (
+          <PageSection>
+            <PageSectionTitle>Agendamentos</PageSectionTitle>
+
+            <PageSectionScroller>
+              {bookings.map((booking) => (
+                <BookingItem key={booking.id} booking={booking} />
+              ))}
+            </PageSectionScroller>
+          </PageSection>
+        )}
 
         <PageSection>
           <PageSectionTitle>Recomendados</PageSectionTitle>
