@@ -58,10 +58,13 @@ import { Booking } from "@prisma/client";
 export interface BookingWithRelations extends Booking {
   service: {
     name: string;
+    priceInCents: number;
   };
   barbershop: {
     name: string;
     imageUrl: string;
+    address: string;
+    phones: string[];
   };
 }
 

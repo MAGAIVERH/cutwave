@@ -35,13 +35,18 @@ const Home = async () => {
         where: {
           userId: session.user.id,
           cancelled: false,
+          date: {
+            gt: new Date(),
+          },
         },
         include: {
-          service: { select: { name: true } },
+          service: { select: { name: true, priceInCents: true } },
           barbershop: {
             select: {
               name: true,
               imageUrl: true,
+              address: true,
+              phones: true,
             },
           },
         },
