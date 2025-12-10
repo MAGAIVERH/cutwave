@@ -42,7 +42,7 @@ export default async function AppointmentsPage() {
       },
     },
     orderBy: {
-      date: "desc",
+      date: "asc",
     },
   });
 

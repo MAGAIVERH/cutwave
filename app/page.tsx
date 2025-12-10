@@ -46,7 +46,7 @@ const Home = async () => {
           },
         },
         orderBy: {
-          date: "desc",
+          date: "asc",
         },
         take: 5,
       })
