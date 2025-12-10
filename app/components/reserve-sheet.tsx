@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 type ReserveSheetProps = {
   open: boolean;
@@ -189,13 +190,20 @@ export const ReserveSheet = ({
       return;
     }
 
-    // se chegou aqui, reserva foi criada com sucesso
-    // (se eu quiser, pode fechar o sheet ou mostrar toast aqui depois)
+    // ✅ SUCESSO — RESERVA CRIADA
+    toast.success("Agendamento realizado com sucesso!");
+
+    // ✅ limpa estados locais
+    setSelectedHour(null);
+    setSelectedDate(new Date());
+
+    // ✅ fecha o sheet
+    onOpenChange(false);
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex h-full w-[90%] flex-col p-0">
+      <SheetContent side="right" className="flex h-full w-[80%] flex-col p-0">
         {/* HEADER */}
         <SheetHeader className="border-b p-4">
           <SheetTitle>Fazer Reserva</SheetTitle>

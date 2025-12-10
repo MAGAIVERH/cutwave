@@ -29,12 +29,15 @@ const Home = async () => {
       <Header />
       <PageContainer>
         <SearchInput />
-        <Image
-          src={banner4}
-          alt="Agende agora!"
-          sizes="100vw"
-          className="h-auto w-full rounded-2xl"
-        />
+        <div className="relative h-120 w-full overflow-hidden rounded-2xl">
+          <Image
+            src={banner4}
+            alt="Agende agora!"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
 
         <PageSection>
           <PageSectionTitle>Agendamentos</PageSectionTitle>

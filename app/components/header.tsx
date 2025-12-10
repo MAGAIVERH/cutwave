@@ -1,7 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { MenuIcon, Home, Calendar, LogOut } from "lucide-react";
+import {
+  MenuIcon,
+  Home,
+  Calendar,
+  LogOut,
+  Scissors,
+  Sparkles,
+  Eye,
+  HandHeart,
+  Droplets,
+  Slice,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,7 +53,7 @@ const Header = () => {
           </Button>
         </SheetTrigger>
 
-        <SheetContent side="right" className="flex h-full w-[90%] flex-col p-0">
+        <SheetContent side="right" className="flex h-full w-[80%] flex-col p-0">
           <SheetHeader className="p-5 pb-0">
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
@@ -81,12 +92,35 @@ const Header = () => {
               <PageSectionTitle>Categorias</PageSectionTitle>
 
               <div className="text-muted-foreground space-y-2 text-sm">
-                <p>Cabelo</p>
-                <p>Barba</p>
-                <p>Acabamento</p>
-                <p>Sobrancelha</p>
-                <p>Massagem</p>
-                <p>Hidratação</p>
+                <div className="flex items-center gap-2">
+                  <Scissors className="h-4 w-4" />
+                  <span>Cabelo</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Slice className="h-4 w-4" />
+                  <span>Barba</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Acabamento</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  <span>Sobrancelha</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <HandHeart className="h-4 w-4" />
+                  <span>Massagem</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Droplets className="h-4 w-4" />
+                  <span>Hidratação</span>
+                </div>
               </div>
             </PageSection>
 
@@ -94,11 +128,11 @@ const Header = () => {
           </PageContainer>
 
           {/* LOGOUT */}
+
           {session && (
             <div className="p-5">
               <Button
-                variant="ghost"
-                className="w-full justify-start text-sm"
+                className="justify-start rounded-2xl text-sm"
                 onClick={() => authClient.signOut()}
               >
                 <LogOut className="mr-2 h-4 w-4" />
