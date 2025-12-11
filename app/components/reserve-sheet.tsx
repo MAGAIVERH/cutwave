@@ -152,53 +152,105 @@ export const ReserveSheet = ({
   }, [selectedDate, barbershopId, serviceId, selectedHour]);
 
   /* CONFIRMAR RESERVA */
+  // const handleConfirm = async () => {
+  //   if (!selectedDate || !selectedHour) return;
 
+  //   const [h, m] = selectedHour.split(":").map(Number);
+
+  //   const bookingDate = new Date(selectedDate);
+  //   bookingDate.setHours(h, m, 0, 0);
+
+  //   const response = await fetch("/api/bookings", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       barbershopId,
+  //       serviceId,
+  //       date: bookingDate,
+  //     }),
+  //   });
+
+  //   if (!response.ok) {
+  //     // 👉 se o backend disser que é conflito de agendamento do usuário
+  //     if (response.status === 409) {
+  //       const data = await response.json();
+
+  //       if (data?.error === "USER_BOOKING_CONFLICT") {
+  //         setConflictInfo(data.conflict);
+  //         setIsConflictDialogOpen(true);
+  //         // não precisa alert() aqui
+  //         return;
+  //       }
+  //     }
+
+  //     // fallback genérico para outros erros (ex: horário ocupado na barbearia)
+  //     alert("Esse horário já está ocupado.");
+  //     setSelectedHour(null);
+  //     return;
+  //   }
+
+  //   // ✅ SUCESSO — RESERVA CRIADA
+  //   toast.success("Agendamento realizado com sucesso!");
+
+  //   // ✅ limpa estados locais
+  //   setSelectedHour(null);
+  //   setSelectedDate(new Date());
+
+  //   // ✅ fecha o sheet
+  //   onOpenChange(false);
+  // };
+
+  // Confirmar Reserva
   const handleConfirm = async () => {
+    // 1. Validação simples (igual antes)
     if (!selectedDate || !selectedHour) return;
 
+    // 2. Monta o horário igual ao seu fluxo atual
     const [h, m] = selectedHour.split(":").map(Number);
-
     const bookingDate = new Date(selectedDate);
     bookingDate.setHours(h, m, 0, 0);
 
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        barbershopId,
-        serviceId,
-        date: bookingDate,
-      }),
-    });
+    // 3. Chamada para o backend — AGORA usando Stripe
+    const response = await fetch(
+      "/api/stripe/create-booking-checkout-session",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceId,
+          date: bookingDate,
+        }),
+      },
+    );
 
+    // 4. Se houve erro no backend (ex: conflito)
     if (!response.ok) {
-      // 👉 se o backend disser que é conflito de agendamento do usuário
       if (response.status === 409) {
         const data = await response.json();
-
         if (data?.error === "USER_BOOKING_CONFLICT") {
           setConflictInfo(data.conflict);
           setIsConflictDialogOpen(true);
-          // não precisa alert() aqui
           return;
         }
       }
 
-      // fallback genérico para outros erros (ex: horário ocupado na barbearia)
-      alert("Esse horário já está ocupado.");
-      setSelectedHour(null);
+      toast.error("Não foi possível iniciar o pagamento.");
       return;
     }
 
-    // ✅ SUCESSO — RESERVA CRIADA
-    toast.success("Agendamento realizado com sucesso!");
+    // 5. Backend retornou sucesso → Stripe retorna uma URL
+    const data = await response.json();
 
-    // ✅ limpa estados locais
-    setSelectedHour(null);
-    setSelectedDate(new Date());
+    if (!data.url) {
+      toast.error("Sessão de pagamento inválida.");
+      return;
+    }
 
-    // ✅ fecha o sheet
+    // 6. Antes de redirecionar → FECHA O SHEET IGUAL O ORIGINAL
     onOpenChange(false);
+
+    // 7. Redireciona para o Stripe Checkout
+    window.location.href = data.url;
   };
 
   return (

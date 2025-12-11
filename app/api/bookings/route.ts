@@ -1,100 +1,118 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+// import { auth } from "@/lib/auth";
 
-export async function POST(req: Request) {
-  // ✅ 1. Usuário logado via Better Auth
-  const session = await auth.api.getSession({
-    headers: req.headers,
-  });
+// ❗ ROTINA DE CRIAÇÃO DE AGENDAMENTOS DESATIVADA
+// Este endpoint era responsável por criar reservas diretamente no banco,
+// porém esse fluxo foi substituído pelo Webhook do Stripe.
+//
+// Hoje, a criação de um agendamento só acontece após a confirmação de pagamento,
+// garantindo que:
+// - horários não sejam bloqueados sem pagamento,
+// - não ocorram reservas falsas,
+// - não exista concorrência entre sessões,
+// - a lógica de criação permaneça segura e centralizada.
+//
+// O único responsável por criar bookings agora é:
+// → /api/stripe/webhook  (checkout.session.completed)
+//
+// Mantemos este bloco apenas como referência histórica e para consulta
+// de regras antigas de conflito de horários.
+// NÃO deve ser utilizado em produção.
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+// export async function POST(req: Request) {
+//   // ✅ 1. Usuário logado via Better Auth
+//   const session = await auth.api.getSession({
+//     headers: req.headers,
+//   });
 
-  const userId = session.user.id;
+//   if (!session?.user?.id) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
 
-  // ✅ 2. Dados do body
-  const { barbershopId, serviceId, date } = await req.json();
+//   const userId = session.user.id;
 
-  if (!barbershopId || !serviceId || !date) {
-    return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-  }
+//   // ✅ 2. Dados do body
+//   const { barbershopId, serviceId, date } = await req.json();
 
-  const start = new Date(date);
-  const end = new Date(date);
-  end.setMinutes(end.getMinutes() + 30);
+//   if (!barbershopId || !serviceId || !date) {
+//     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+//   }
 
-  // ✅ REGRA 1 — usuário não pode ter dois agendamentos no mesmo horário
-  const userConflict = await prisma.booking.findFirst({
-    where: {
-      userId,
-      cancelled: false,
-      date: {
-        gte: start,
-        lt: end,
-      },
-    },
-  });
+//   const start = new Date(date);
+//   const end = new Date(date);
+//   end.setMinutes(end.getMinutes() + 30);
 
-  if (userConflict) {
-    const conflictBooking = await prisma.booking.findUnique({
-      where: { id: userConflict.id },
-      include: {
-        barbershop: {
-          select: { name: true },
-        },
-        service: {
-          select: { name: true },
-        },
-      },
-    });
+//   // ✅ REGRA 1 — usuário não pode ter dois agendamentos no mesmo horário
+//   const userConflict = await prisma.booking.findFirst({
+//     where: {
+//       userId,
+//       cancelled: false,
+//       date: {
+//         gte: start,
+//         lt: end,
+//       },
+//     },
+//   });
 
-    return NextResponse.json(
-      {
-        error: "USER_BOOKING_CONFLICT",
-        conflict: {
-          barbershopName: conflictBooking?.barbershop.name,
-          serviceName: conflictBooking?.service.name,
-          date: conflictBooking?.date,
-        },
-      },
-      { status: 409 },
-    );
-  }
+//   if (userConflict) {
+//     const conflictBooking = await prisma.booking.findUnique({
+//       where: { id: userConflict.id },
+//       include: {
+//         barbershop: {
+//           select: { name: true },
+//         },
+//         service: {
+//           select: { name: true },
+//         },
+//       },
+//     });
 
-  // ✅ REGRA 2 — horário ocupado na barbearia/serviço
-  const serviceConflict = await prisma.booking.findFirst({
-    where: {
-      barbershopId,
-      serviceId,
-      cancelled: false,
-      date: {
-        gte: start,
-        lt: end,
-      },
-    },
-  });
+//     return NextResponse.json(
+//       {
+//         error: "USER_BOOKING_CONFLICT",
+//         conflict: {
+//           barbershopName: conflictBooking?.barbershop.name,
+//           serviceName: conflictBooking?.service.name,
+//           date: conflictBooking?.date,
+//         },
+//       },
+//       { status: 409 },
+//     );
+//   }
 
-  if (serviceConflict) {
-    return NextResponse.json(
-      { error: "Horário indisponível" },
-      { status: 409 },
-    );
-  }
+//   // ✅ REGRA 2 — horário ocupado na barbearia/serviço
+//   const serviceConflict = await prisma.booking.findFirst({
+//     where: {
+//       barbershopId,
+//       serviceId,
+//       cancelled: false,
+//       date: {
+//         gte: start,
+//         lt: end,
+//       },
+//     },
+//   });
 
-  // ✅ Criar reserva
-  const booking = await prisma.booking.create({
-    data: {
-      userId,
-      barbershopId,
-      serviceId,
-      date: start,
-    },
-  });
+//   if (serviceConflict) {
+//     return NextResponse.json(
+//       { error: "Horário indisponível" },
+//       { status: 409 },
+//     );
+//   }
 
-  return NextResponse.json(booking);
-}
+//   // ✅ Criar reserva
+//   const booking = await prisma.booking.create({
+//     data: {
+//       userId,
+//       barbershopId,
+//       serviceId,
+//       date: start,
+//     },
+//   });
+
+//   return NextResponse.json(booking);
+// }
 
 // GET — BUSCA HORÁRIOS OCUPADOS
 export async function GET(req: Request) {
