@@ -31,11 +31,13 @@ const AuthSection = ({ session, isPending }: AuthSectionProps) => {
           size="sm"
           onClick={() => {
             const redirect = localStorage.getItem("redirectAfterLogin") ?? "/";
+
             localStorage.removeItem("redirectAfterLogin");
 
-            window.location.href = `/api/auth/signin/google?callbackURL=${encodeURIComponent(
-              redirect,
-            )}`;
+            authClient.signIn.social({
+              provider: "google",
+              callbackURL: redirect,
+            });
           }}
         >
           Login <LogInIcon />
