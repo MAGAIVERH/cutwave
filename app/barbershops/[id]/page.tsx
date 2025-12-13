@@ -111,9 +111,11 @@ const BarbershopPage = async ({
           <PageSectionTitle>Serviços</PageSectionTitle>
 
           <div className="space-y-4">
-            {barbershop.services.map((service) => (
-              <ServiceItem key={service.id} service={service} />
-            ))}
+            {barbershop.services.map(
+              (service: (typeof barbershop.services)[number]) => (
+                <ServiceItem key={service.id} service={service} />
+              ),
+            )}
           </div>
         </PageSection>
 
