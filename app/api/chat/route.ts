@@ -199,7 +199,7 @@ SEMPRE mostre opções reais do banco de dados.
               barbershopId: b.id,
               name: b.name,
               address: b.address,
-              services: b.services.map((s) => ({
+              services: b.services.map((s: (typeof b.services)[number]) => ({
                 id: s.id,
                 name: s.name,
                 price: `R$ ${(s.priceInCents / 100).toFixed(2)}`,
