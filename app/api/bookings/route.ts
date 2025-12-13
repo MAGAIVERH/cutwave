@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { Booking } from "@prisma/client";
 // import { auth } from "@/lib/auth";
 
 // ❗ ROTINA DE CRIAÇÃO DE AGENDAMENTOS DESATIVADA
@@ -169,7 +170,7 @@ export async function GET(req: Request) {
     },
   });
 
-  const bookedHours = bookings.map((b) => {
+  const bookedHours = bookings.map((b: Booking) => {
     const h = b.date.getHours().toString().padStart(2, "0");
     const m = b.date.getMinutes().toString().padStart(2, "0");
     return `${h}:${m}`; // ex: "13:30"
