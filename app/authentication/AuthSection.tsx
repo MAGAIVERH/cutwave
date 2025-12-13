@@ -33,7 +33,7 @@ const AuthSection = ({ session, isPending }: AuthSectionProps) => {
             const redirect = localStorage.getItem("redirectAfterLogin") ?? "/";
             localStorage.removeItem("redirectAfterLogin");
 
-            window.location.href = `/api/auth/sign-in/google?callbackURL=${encodeURIComponent(
+            window.location.href = `/api/auth/signin/google?callbackURL=${encodeURIComponent(
               redirect,
             )}`;
           }}
