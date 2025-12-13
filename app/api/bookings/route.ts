@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 
-type BookingWithDate = Prisma.BookingGetPayload<{
-  select: {
-    date: true;
-  };
-}>;
+import { prisma } from "@/lib/prisma";
 
 // GET — BUSCA HORÁRIOS OCUPADOS
 export async function GET(req: Request) {
@@ -51,7 +45,7 @@ export async function GET(req: Request) {
     });
   }
 
-  const bookings: BookingWithDate[] = await prisma.booking.findMany({
+  const bookings: Array<{ date: Date }> = await prisma.booking.findMany({
     where: {
       cancelled: false,
       date: {
