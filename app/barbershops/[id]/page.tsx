@@ -124,21 +124,23 @@ const BarbershopPage = async ({
           <PageSectionTitle>Contato</PageSectionTitle>
 
           <div className="space-y-2">
-            {barbershop.phones.map((phone) => (
-              <div
-                key={phone}
-                className="bg-card border-border flex items-center justify-between rounded-xl border p-4"
-              >
-                {/* TELEFONE COM ÍCONE */}
-                <div className="text-foreground flex items-center gap-2 text-sm">
-                  <Smartphone className="text-muted-foreground h-4 w-4" />
-                  <span>{phone}</span>
-                </div>
+            {barbershop.phones.map(
+              (phone: (typeof barbershop.phones)[number]) => (
+                <div
+                  key={phone}
+                  className="bg-card border-border flex items-center justify-between rounded-xl border p-4"
+                >
+                  {/* TELEFONE COM ÍCONE */}
+                  <div className="text-foreground flex items-center gap-2 text-sm">
+                    <Smartphone className="text-muted-foreground h-4 w-4" />
+                    <span>{phone}</span>
+                  </div>
 
-                {/* BOTÃO DE COPIAR */}
-                <CopyButton value={phone} />
-              </div>
-            ))}
+                  {/* BOTÃO DE COPIAR */}
+                  <CopyButton value={phone} />
+                </div>
+              ),
+            )}
           </div>
         </PageSection>
       </PageContainer>
