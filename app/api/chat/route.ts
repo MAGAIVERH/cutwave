@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, stepCountIs,streamText, tool } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import { cookies } from "next/headers";
 import z from "zod";
 
@@ -195,7 +195,7 @@ SEMPRE mostre opções reais do banco de dados.
           console.log(`✅ Encontradas ${data.length} barbearias`);
 
           return {
-            barbershops: data.map((b) => ({
+            barbershops: data.map((b: (typeof data)[number]) => ({
               barbershopId: b.id,
               name: b.name,
               address: b.address,
