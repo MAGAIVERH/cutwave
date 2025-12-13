@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/page";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import SearchQuickFilters from "./components/search-quick-filters";
 
 const Home = async () => {
   const recomendedBarbershops = await prisma.barbershop.findMany({
@@ -61,6 +62,10 @@ const Home = async () => {
       <Header />
       <PageContainer>
         <SearchInput />
+        <PageSectionScroller>
+          <SearchQuickFilters />
+        </PageSectionScroller>
+
         <div className="relative h-120 w-full overflow-hidden rounded-2xl">
           <Image
             src={banner4}

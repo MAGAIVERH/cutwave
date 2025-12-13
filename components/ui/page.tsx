@@ -7,7 +7,7 @@ export const PageContainer = ({
   children: React.ReactNode;
   className?: string;
 }) => {
-  return <div className={cn("space-y-6 p-5", className)}>{children}</div>;
+  return <div className={cn("space-y-5 p-5", className)}>{children}</div>;
 };
 
 export const PageSectionTitle = ({
