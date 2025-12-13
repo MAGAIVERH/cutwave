@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
-
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+type BookingWithDate = Prisma.BookingGetPayload<{
+  select: {
+    date: true;
+  };
+}>;
 
 // GET — BUSCA HORÁRIOS OCUPADOS
 export async function GET(req: Request) {
@@ -45,7 +51,7 @@ export async function GET(req: Request) {
     });
   }
 
-  const bookings = await prisma.booking.findMany({
+  const bookings: BookingWithDate[] = await prisma.booking.findMany({
     where: {
       cancelled: false,
       date: {
@@ -53,6 +59,9 @@ export async function GET(req: Request) {
         lte: end,
       },
       OR: orConditions,
+    },
+    select: {
+      date: true,
     },
   });
 
