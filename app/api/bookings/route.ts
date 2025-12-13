@@ -1,7 +1,70 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { Booking } from "@prisma/client";
+
+// GET — BUSCA HORÁRIOS OCUPADOS
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+
+  const barbershopId = searchParams.get("barbershopId");
+  const serviceId = searchParams.get("serviceId");
+  const userId = searchParams.get("userId");
+  const timestamp = searchParams.get("timestamp");
+
+  if (!serviceId || !timestamp) {
+    return NextResponse.json([]);
+  }
+
+  const baseDate = new Date(Number(timestamp));
+
+  const start = new Date(baseDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(baseDate);
+  end.setHours(23, 59, 59, 999);
+
+  // ✅ monta OR sem undefined (Prisma-safe)
+  const orConditions: {
+    userId?: string;
+    barbershopId?: string;
+    serviceId?: string;
+  }[] = [];
+
+  // ✅ conflito GLOBAL do usuário
+  if (userId) {
+    orConditions.push({
+      userId,
+    });
+  }
+
+  // ✅ conflito LOCAL (barbearia + serviço)
+  if (barbershopId) {
+    orConditions.push({
+      barbershopId,
+      serviceId,
+    });
+  }
+
+  const bookings = await prisma.booking.findMany({
+    where: {
+      cancelled: false,
+      date: {
+        gte: start,
+        lte: end,
+      },
+      OR: orConditions,
+    },
+  });
+
+  const bookedHours = bookings.map((b) => {
+    const h = b.date.getHours().toString().padStart(2, "0");
+    const m = b.date.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`; // ex: "13:30"
+  });
+
+  return NextResponse.json(bookedHours);
+}
+
 // import { auth } from "@/lib/auth";
 
 // ❗ ROTINA DE CRIAÇÃO DE AGENDAMENTOS DESATIVADA
@@ -115,66 +178,3 @@ import { Booking } from "@prisma/client";
 
 //   return NextResponse.json(booking);
 // }
-
-// GET — BUSCA HORÁRIOS OCUPADOS
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-
-  const barbershopId = searchParams.get("barbershopId");
-  const serviceId = searchParams.get("serviceId");
-  const userId = searchParams.get("userId");
-  const timestamp = searchParams.get("timestamp");
-
-  if (!serviceId || !timestamp) {
-    return NextResponse.json([]);
-  }
-
-  const baseDate = new Date(Number(timestamp));
-
-  const start = new Date(baseDate);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(baseDate);
-  end.setHours(23, 59, 59, 999);
-
-  // ✅ monta OR sem undefined (Prisma-safe)
-  const orConditions: {
-    userId?: string;
-    barbershopId?: string;
-    serviceId?: string;
-  }[] = [];
-
-  // ✅ conflito GLOBAL do usuário
-  if (userId) {
-    orConditions.push({
-      userId,
-    });
-  }
-
-  // ✅ conflito LOCAL (barbearia + serviço)
-  if (barbershopId) {
-    orConditions.push({
-      barbershopId,
-      serviceId,
-    });
-  }
-
-  const bookings = await prisma.booking.findMany({
-    where: {
-      cancelled: false,
-      date: {
-        gte: start,
-        lte: end,
-      },
-      OR: orConditions,
-    },
-  });
-
-  const bookedHours = bookings.map((b: Booking) => {
-    const h = b.date.getHours().toString().padStart(2, "0");
-    const m = b.date.getMinutes().toString().padStart(2, "0");
-    return `${h}:${m}`; // ex: "13:30"
-  });
-
-  return NextResponse.json(bookedHours);
-}
