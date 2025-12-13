@@ -1,26 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Smartphone } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { CopyButton } from "@/app/barbershops/components/copy-button";
+import { BookingWithRelations } from "@/app/components/booking-item";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-
 import {
   PageContainer,
   PageSection,
   PageSectionTitle,
 } from "@/components/ui/page";
-
-import { BookingWithRelations } from "@/app/components/booking-item";
-import { CopyButton } from "@/app/barbershops/components/copy-button";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import mapImage from "@/public/map.png";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
-import { Smartphone } from "lucide-react";
 
 interface BookingDetailsSheetProps {
   booking: BookingWithRelations | null;

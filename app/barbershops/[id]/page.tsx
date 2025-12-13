@@ -1,18 +1,20 @@
+import { ArrowLeft, Smartphone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+
+import Footer from "@/app/components/footer";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   PageContainer,
   PageSection,
   PageSectionTitle,
 } from "@/components/ui/page";
-import { ArrowLeft, Smartphone } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { prisma } from "@/lib/prisma";
+
 import { CopyButton } from "../components/copy-button";
 import ServiceItem from "../components/service-item";
-import { Separator } from "@/components/ui/separator";
-import Footer from "@/app/components/footer";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type BarbershopPageProps = {
   params: {

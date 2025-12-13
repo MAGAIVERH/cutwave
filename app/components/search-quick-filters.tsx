@@ -1,8 +1,9 @@
 "use client";
 
+import { Brush, Droplets,Eye, Scissors, Slice, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
-import { Scissors, Slice, Brush, Eye, Sparkles, Droplets } from "lucide-react";
 
 const filters = [
   { label: "Cabelo", icon: Scissors, value: "cabelo" },

@@ -111,16 +111,15 @@
 //   );
 // }
 
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
+import Footer from "@/app/components/footer";
+import Header from "@/app/components/header";
+import { PageContainer } from "@/components/ui/page";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-import Header from "@/app/components/header";
-import Footer from "@/app/components/footer";
-
-import { PageContainer } from "@/components/ui/page";
 import AppointmentsClient from "./components/appointments-client";
 
 export default async function AppointmentsPage() {

@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import type { UIMessage } from "ai";
 import { Bot } from "lucide-react";
 import { Streamdown } from "streamdown";
+
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -17,10 +18,7 @@ export const ChatMessage = ({
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
 
-  /**
-   * Extrai texto com segurança de qualquer UIMessagePart
-   * (compatível com ai-sdk novo)
-   */
+  // Extrai texto do message
   const content = message.parts
     .map((part) => {
       if (part.type === "text" && "text" in part) {
@@ -30,16 +28,20 @@ export const ChatMessage = ({
     })
     .join("");
 
-  // 🔍 tenta extrair checkoutUrl se a IA retornou JSON
-  let checkoutUrl: string | null = null;
+  // 🔍 Tenta detectar se é um checkout
+  let checkoutData: { type: string; checkoutUrl: string } | null = null;
 
   try {
     const parsed = JSON.parse(content);
-    if (parsed?.checkoutUrl && typeof parsed.checkoutUrl === "string") {
-      checkoutUrl = parsed.checkoutUrl;
+    if (
+      parsed?.type === "checkout" &&
+      parsed?.checkoutUrl &&
+      typeof parsed.checkoutUrl === "string"
+    ) {
+      checkoutData = parsed;
     }
   } catch {
-    // não é JSON, segue normal
+    // Não é JSON, renderiza texto normal
   }
 
   if (isSystem) {
@@ -66,6 +68,7 @@ export const ChatMessage = ({
     );
   }
 
+  // Mensagem do assistente
   return (
     <div className="flex w-full flex-col gap-3 pt-6 pr-14 pb-0 pl-3">
       <div className="flex w-full gap-2">
@@ -74,28 +77,32 @@ export const ChatMessage = ({
         </div>
 
         <div className="text-foreground max-w-full text-sm leading-[1.4] wrap-break-word">
-          {/* Texto normal */}
-          {!checkoutUrl && <Streamdown>{content}</Streamdown>}
-
-          {/* 💳 Checkout */}
-          {checkoutUrl && (
+          {/* 💳 Botão de Checkout */}
+          {checkoutData && (
             <div className="flex flex-col gap-3">
-              <p>
-                Perfeito! Para concluir o agendamento, finalize o pagamento
-                abaixo:
+              <p className="font-medium">
+                ✅ Perfeito! Tudo pronto para finalizar seu agendamento.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Clique no botão abaixo para prosseguir com o pagamento seguro:
               </p>
 
               <Button
-                className="w-fit rounded-3xl"
+                className="w-fit rounded-full px-6"
+                size="lg"
                 onClick={() => {
-                  localStorage.setItem("chatCheckout", "true");
-                  window.location.href = checkoutUrl;
+                  // Salva que veio do chat
+                  sessionStorage.setItem("fromChat", "true");
+                  window.location.href = checkoutData.checkoutUrl;
                 }}
               >
-                Pagar agora
+                💳 Pagar agora
               </Button>
             </div>
           )}
+
+          {/* 📝 Texto normal */}
+          {!checkoutData && <Streamdown>{content}</Streamdown>}
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import BarbershopItem from "@/app/components/barbershop-item";
 import SearchInput from "@/app/components/search-input";
 import SearchQuickFilters from "@/app/components/search-quick-filters";
-import BarbershopItem from "@/app/components/barbershop-item";
-import Header from "../components/header";
 import { PageSectionScroller } from "@/components/ui/page";
+import { prisma } from "@/lib/prisma";
+
+import Header from "../components/header";
 
 interface SearchPageProps {
   searchParams: Promise<{

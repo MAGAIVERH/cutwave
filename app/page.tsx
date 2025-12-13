@@ -1,11 +1,6 @@
+import { headers } from "next/headers";
 import Image from "next/image";
-import Header from "./components/header";
-import SearchInput from "./components/search-input";
-import banner4 from "../public/banner4.png";
-import BookingItem from "./components/booking-item";
-import BarbershopItem from "./components/barbershop-item";
-import { prisma } from "@/lib/prisma";
-import Footer from "./components/footer";
+
 import {
   PageContainer,
   PageSection,
@@ -13,7 +8,14 @@ import {
   PageSectionTitle,
 } from "@/components/ui/page";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
+
+import banner4 from "../public/banner4.png";
+import BarbershopItem from "./components/barbershop-item";
+import BookingItem from "./components/booking-item";
+import Footer from "./components/footer";
+import Header from "./components/header";
+import SearchInput from "./components/search-input";
 import SearchQuickFilters from "./components/search-quick-filters";
 
 const Home = async () => {

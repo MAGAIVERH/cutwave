@@ -1,14 +1,15 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import type { UIMessage } from "ai";
-import { ChatMessage } from "./components/chat-message";
+import { useRouter,useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { ChatInput } from "./components/chat-input";
+import { ChatMessage } from "./components/chat-message";
 
 const STORAGE_KEY = "cutwave.chat.v1";
 
@@ -16,7 +17,12 @@ const INITIAL_MESSAGES: UIMessage[] = [
   {
     id: "system-welcome",
     role: "system",
-    parts: [{ type: "text", text: "Seu assistente de agendamentos está online." }],
+    parts: [
+      {
+        type: "text",
+        text: "Seu assistente de agendamentos está online.",
+      },
+    ],
   },
   {
     id: "assistant-welcome",
@@ -25,9 +31,14 @@ const INITIAL_MESSAGES: UIMessage[] = [
       {
         type: "text",
         text:
-          "Olá! Sou o CutWave, seu assistente pessoal.\n\n" +
-          "Estou aqui para te auxiliar a agendar seu corte ou barba, " +
-          "encontrar as barbearias disponíveis perto de você e responder às suas dúvidas.",
+          "Olá! Sou o CutWave, seu assistente pessoal. 👋\n\n" +
+          "Estou aqui para te ajudar a agendar seu corte ou barba. " +
+          "Vou te guiar pelo processo:\n\n" +
+          "1️⃣ Escolher a barbearia\n" +
+          "2️⃣ Selecionar o serviço\n" +
+          "3️⃣ Definir data e horário\n" +
+          "4️⃣ Confirmar e pagar\n\n" +
+          "Como posso te ajudar hoje? 😊",
       },
     ],
   },
@@ -38,8 +49,9 @@ function safeParseMessages(value: string | null): UIMessage[] {
   try {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    // validação mínima
-    return parsed.filter((m) => m && typeof m === "object" && typeof m.id === "string");
+    return parsed.filter(
+      (m) => m && typeof m === "object" && typeof m.id === "string",
+    );
   } catch {
     return [];
   }
@@ -59,51 +71,51 @@ export default function ChatPage() {
   const router = useRouter();
   const checkout = searchParams.get("checkout");
 
-  // ✅ Mensagens locais (pós-checkout etc.)
   const [localMessages, setLocalMessages] = useState<UIMessage[]>([]);
+  const [hasProcessedCheckout, setHasProcessedCheckout] = useState(false);
 
-  // ✅ Carrega histórico persistido 1 vez
   const persistedMessages = useMemo<UIMessage[]>(() => {
     if (typeof window === "undefined") return [];
-    return safeParseMessages(window.localStorage.getItem(STORAGE_KEY));
+    return safeParseMessages(localStorage.getItem(STORAGE_KEY));
   }, []);
 
-  const {
-    messages,
-    setMessages, // ✅ importante para reidratar o useChat
-    sendMessage,
-    status,
-  } = useChat({
+  const { messages, setMessages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
 
-  // ✅ Reidratação do useChat (sem initialMessages)
+  // Reidratação do chat
   useEffect(() => {
-    // Só reidrata se o hook ainda estiver vazio
     if (messages.length === 0 && persistedMessages.length > 0) {
       setMessages(persistedMessages);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ Scroll
+  // Scroll automático
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, localMessages]);
 
-  // ✅ Persistência REAL: salva a conversa do useChat + localMessages
+  // Persistência
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Importante: NÃO salvar INITIAL_MESSAGES (são fixas)
     const merged = uniqById([...messages, ...localMessages]);
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    if (merged.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    }
   }, [messages, localMessages]);
 
-  // ✅ Mensagem pós-checkout (sem resetar conversa)
+  // 🔥 Mensagem pós-checkout (CORRIGIDO)
   useEffect(() => {
-    if (!checkout) return;
+    if (!checkout || hasProcessedCheckout) return;
+
+    const fromChat = sessionStorage.getItem("fromChat");
+    if (!fromChat) return; // Não veio do chat
+
+    // Marca como processado
+    setHasProcessedCheckout(true);
+    sessionStorage.removeItem("fromChat");
 
     if (checkout === "success") {
       setLocalMessages((prev) =>
@@ -116,13 +128,13 @@ export default function ChatPage() {
               {
                 type: "text",
                 text:
-                  "🎉 Pagamento confirmado!\n\n" +
-                  "Seu agendamento foi realizado com sucesso. Obrigado por escolher o CutWave ✂️\n\n" +
-                  "📌 Onde ver seus agendamentos:\n" +
-                  "1) Abra o **Menu**\n" +
-                  "2) Toque em **Agendamentos**\n" +
-                  "3) Veja **data, horário e status** do serviço\n\n" +
-                  "Se quiser agendar outro serviço, é só me dizer 😊",
+                  "🎉 **Pagamento confirmado!**\n\n" +
+                  "Seu agendamento foi realizado com sucesso. Obrigado por escolher o CutWave! ✂️\n\n" +
+                  "📌 **Onde ver seus agendamentos:**\n" +
+                  "1. Abra o **Menu**\n" +
+                  "2. Toque em **Agendamentos**\n" +
+                  "3. Veja **data, horário e status** do serviço\n\n" +
+                  "Se quiser agendar outro serviço, é só me dizer! 😊",
               },
             ],
           },
@@ -141,8 +153,8 @@ export default function ChatPage() {
               {
                 type: "text",
                 text:
-                  "Pagamento cancelado.\n\n" +
-                  "Se quiser, posso te ajudar a escolher outro dia/horário 😊",
+                  "❌ Pagamento cancelado.\n\n" +
+                  "Sem problemas! Se quiser, posso te ajudar a escolher outro dia ou horário. 😊",
               },
             ],
           },
@@ -150,9 +162,9 @@ export default function ChatPage() {
       );
     }
 
-    // limpa a URL (mas NÃO limpa histórico)
-    router.replace("/chat");
-  }, [checkout, router]);
+    // Remove o parâmetro da URL
+    router.replace("/chat", { scroll: false });
+  }, [checkout, hasProcessedCheckout, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,40 +177,29 @@ export default function ChatPage() {
 
   const isLoading = status === "streaming" || status === "submitted";
 
-  // ✅ Render final (fixo + local + chat)
-  const allMessages: UIMessage[] = [
+  const allMessages: UIMessage[] = uniqById([
     ...INITIAL_MESSAGES,
-    ...localMessages,
     ...messages,
-  ];
+    ...localMessages,
+  ]);
 
   return (
     <div className="bg-background relative flex h-screen w-full flex-col overflow-hidden rounded-[20px]">
       {/* Header */}
-      <div className="flex w-[390px] items-center justify-between pt-6 pr-5 pb-0 pl-5">
+      <div className="flex w-full items-center justify-between border-b pt-6 pr-5 pb-4 pl-5">
         <Link href="/">
           <ChevronLeft className="size-6 shrink-0" />
         </Link>
-
-        <p className="font-merriweather text-foreground text-[20px] leading-[1.4] tracking-[-1px] text-nowrap whitespace-pre italic">
+        <p className="font-merriweather text-foreground text-[20px] leading-[1.4] tracking-[-1px] italic">
           CutWave
         </p>
-
-        <div className="flex items-center justify-end gap-[15px]" />
+        <div className="w-6" /> {/* Espaçamento */}
       </div>
 
       {/* Messages */}
       <div className="w-full flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden">
-        {allMessages.map((msg, index) => (
-          <ChatMessage
-            key={msg.id}
-            message={msg}
-            isStreaming={
-              status === "streaming" &&
-              index === allMessages.length - 1 &&
-              msg.role === "assistant"
-            }
-          />
+        {allMessages.map((msg) => (
+          <ChatMessage key={msg.id} message={msg} />
         ))}
         <div ref={messagesEndRef} />
       </div>

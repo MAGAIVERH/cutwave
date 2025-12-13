@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+
 import BookingItem, {
   BookingWithRelations,
 } from "@/app/components/booking-item";
-
 import { Separator } from "@/components/ui/separator";
+
 import BookingDetailsSheet from "./booking-details-sheet";
 
 interface AppointmentsClientProps {

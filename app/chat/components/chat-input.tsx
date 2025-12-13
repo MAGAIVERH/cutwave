@@ -1,8 +1,9 @@
 "use client";
 
+import { Mic, Send } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, Send } from "lucide-react";
 
 interface ChatInputProps {
   input: string;
@@ -35,6 +36,7 @@ export const ChatInput = ({
           className="bg-accent grow basis-0 rounded-full px-4 py-3 text-sm"
           disabled={isLoading}
         />
+
         <Button
           size="icon"
           className="bg-accent size-[42px] shrink-0 rounded-full p-2.5"
@@ -42,6 +44,7 @@ export const ChatInput = ({
         >
           <Mic className="size-5 text-white" />
         </Button>
+
         <Button
           size="icon"
           className="bg-accent size-[42px] shrink-0 rounded-full p-2.5"

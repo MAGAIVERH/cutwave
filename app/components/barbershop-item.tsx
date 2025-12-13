@@ -3,8 +3,9 @@
 import { Barbershop } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+
 import { useAuthUI } from "@/app/context/auth-ui-context";
+import { authClient } from "@/lib/auth-client";
 
 interface BarbershopItemProps {
   barbershop: Barbershop;

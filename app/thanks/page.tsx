@@ -1,17 +1,17 @@
 "use client";
 
-import {
-  Scissors,
-  Sparkles,
-  Wand2,
-  Star,
-  Heart,
-  Crown,
-  ShieldCheck,
-} from "lucide-react";
-
 import { motion } from "framer-motion";
+import {
+  Crown,
+  Heart,
+  Scissors,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Wand2,
+} from "lucide-react";
 import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 
 export default function ThankYouPage() {

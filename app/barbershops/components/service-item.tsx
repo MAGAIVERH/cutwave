@@ -1,9 +1,10 @@
 "use client";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { BarbershopService } from "@prisma/client";
+import Image from "next/image";
 import { useState } from "react";
+
 import { ReserveSheet } from "@/app/components/reserve-sheet";
+import { Button } from "@/components/ui/button";
 
 interface ServiceItemProps {
   service: BarbershopService & {

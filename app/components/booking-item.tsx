@@ -50,10 +50,11 @@
 // };
 
 // export default BookingItem;
+import { Booking } from "@prisma/client";
+
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Booking } from "@prisma/client";
 
 export interface BookingWithRelations extends Booking {
   service: {

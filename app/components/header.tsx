@@ -1,20 +1,32 @@
 "use client";
 
-import Image from "next/image";
 import {
-  MenuIcon,
-  Home,
   Calendar,
-  LogOut,
-  Scissors,
-  Sparkles,
+  Droplets,
   Eye,
   HandHeart,
-  Droplets,
-  Slice,
+  Home,
+  LogOut,
+  MenuIcon,
   MessageCircleIcon,
+  Scissors,
+  Slice,
+  Sparkles,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+// ✅ CONTEXTO (novo)
+import { useAuthUI } from "@/app/context/auth-ui-context";
 import { Button } from "@/components/ui/button";
+// ✅ layout do projeto
+import {
+  PageContainer,
+  PageSection,
+  PageSectionTitle,
+} from "@/components/ui/page";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -24,19 +36,7 @@ import {
 } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
 
-// ✅ layout do projeto
-import {
-  PageContainer,
-  PageSection,
-  PageSectionTitle,
-} from "@/components/ui/page";
-import { Separator } from "@/components/ui/separator";
 import AuthSection from "../authentication/AuthSection";
-
-// ✅ CONTEXTO (novo)
-import { useAuthUI } from "@/app/context/auth-ui-context";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const Header = () => {
   const router = useRouter();

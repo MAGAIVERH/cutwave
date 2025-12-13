@@ -1,9 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { LogInIcon } from "lucide-react";
+import Image from "next/image";
+
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+
 import { useAuthUI } from "../context/auth-ui-context";
 
 type AuthSectionProps = {
