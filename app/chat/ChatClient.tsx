@@ -182,9 +182,9 @@ export default function ChatClient() {
   ]);
 
   return (
-    <div className="bg-background relative flex h-screen w-full flex-col overflow-hidden rounded-[20px]">
+    <div className="bg-background relative flex h-dvh w-full flex-col overflow-hidden sm:rounded-[20px]">
       {/* Header */}
-      <div className="flex w-full items-center justify-between border-b pt-6 pr-5 pb-4 pl-5">
+      <div className="flex w-full shrink-0 items-center justify-between border-b pt-6 pr-5 pb-4 pl-5">
         <Link href="/">
           <ChevronLeft className="size-6 shrink-0" />
         </Link>
@@ -195,7 +195,7 @@ export default function ChatClient() {
       </div>
 
       {/* Messages */}
-      <div className="w-full flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden">
+      <div className="w-full flex-1 overflow-y-auto px-4 py-3 [&::-webkit-scrollbar]:hidden">
         {allMessages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
