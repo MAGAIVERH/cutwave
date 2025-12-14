@@ -1,7 +1,6 @@
 "use client";
 
 import { Mic, Send } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,14 +25,14 @@ export const ChatInput = ({
   };
 
   return (
-    <div className="bg-muted absolute bottom-0 left-0 flex w-full flex-col gap-2.5 p-5">
-      <div className="flex w-full gap-2">
+    <div className="bg-muted shrink-0 border-t px-4 py-3">
+      <div className="flex w-full items-center gap-2">
         <Input
           value={input}
           onChange={onChange}
           onKeyDown={handleKeyDown}
           placeholder="Digite sua mensagem"
-          className="bg-accent grow basis-0 rounded-full px-4 py-3 text-sm"
+          className="bg-accent flex-1 rounded-full px-4 py-3 text-sm"
           disabled={isLoading}
         />
 
