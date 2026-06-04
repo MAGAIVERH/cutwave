@@ -44,7 +44,7 @@ const BarbershopItem = ({ barbershop }: BarbershopItemProps) => {
         src={barbershop.imageUrl}
         alt={barbershop.name}
         fill
-        className="object-cover"
+        className="object-cover lg:object-[center_35%]"
       />
 
       <div className="absolute right-0 bottom-0 left-0 z-20 p-4">
