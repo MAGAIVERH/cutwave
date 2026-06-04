@@ -2,6 +2,75 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 export const CHAT_API_MESSAGE_LIMIT = 12;
 
+/** Local calendar date as YYYY-MM-DD (avoids UTC off-by-one from toISOString). */
+export function getTodayIsoDate(reference = new Date()): string {
+  const y = reference.getFullYear();
+  const m = String(reference.getMonth() + 1).padStart(2, "0");
+  const d = String(reference.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function parseIsoDateOnly(iso: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!match) return null;
+
+  const date = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+  );
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatIsoDateUs(iso: string): string {
+  const parsed = parseIsoDateOnly(iso);
+  if (!parsed) return iso;
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
+export function isIsoDateBeforeToday(iso: string, todayIso = getTodayIsoDate()): boolean {
+  return iso < todayIso;
+}
+
+export function isValidIsoDate(iso: string): boolean {
+  return parseIsoDateOnly(iso) !== null;
+}
+
+export function suggestUpcomingIsoDates(
+  count = 5,
+  reference = new Date(),
+): string[] {
+  const dates: string[] = [];
+  const cursor = parseIsoDateOnly(getTodayIsoDate(reference));
+  if (!cursor) return dates;
+
+  for (let i = 1; dates.length < count; i++) {
+    const next = new Date(cursor);
+    next.setDate(cursor.getDate() + i);
+    dates.push(getTodayIsoDate(next));
+  }
+
+  return dates;
+}
+
+export function getChatTodayContext(reference = new Date()) {
+  const isoDate = getTodayIsoDate(reference);
+  const today = reference.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  return { isoDate, today, todayUs: formatIsoDateUs(isoDate) };
+}
+
 type ChatMessageLike = {
   role?: string;
   content?: unknown;
@@ -85,7 +154,12 @@ export function extractPendingBooking(
   if (!lastSlotQuery) return null;
 
   const buildAppointment = (time: string) => {
-    const appointment = new Date(`${lastSlotQuery!.date}T${time}:00`);
+    const base = parseIsoDateOnly(lastSlotQuery!.date);
+    if (!base) return null;
+
+    const [hours, minutes] = time.split(":").map(Number);
+    base.setHours(hours, minutes, 0, 0);
+    const appointment = base;
     if (Number.isNaN(appointment.getTime())) return null;
     return {
       serviceId: lastSlotQuery!.serviceId,
@@ -134,6 +208,21 @@ export function getLastUserText(messages: ChatMessageLike[]): string {
 export function isConfirmCommand(text: string): boolean {
   const normalized = text.trim().toLowerCase();
   return normalized === "confirm" || normalized === "confirmar";
+}
+
+export function loginRequiredUIMessageStreamResponse() {
+  const payload = JSON.stringify({ type: "login-required" });
+  const textId = `login-required-${Date.now()}`;
+
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      writer.write({ type: "text-start", id: textId });
+      writer.write({ type: "text-delta", id: textId, delta: payload });
+      writer.write({ type: "text-end", id: textId });
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
 }
 
 export function checkoutUIMessageStreamResponse(checkoutUrl: string) {

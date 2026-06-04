@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { authClient } from "@/lib/auth-client";
+
 import { ChatInput } from "./components/chat-input";
 import { ChatMessage } from "./components/chat-message";
 
@@ -53,6 +55,7 @@ const INITIAL_MESSAGES: UIMessage[] = [
           "2️⃣ Select a service\n" +
           "3️⃣ Pick date and time\n" +
           "4️⃣ Confirm and pay\n\n" +
+          "Sign in when you're ready — I'll help you book step by step.\n\n" +
           "How can I help you today? 😊",
       },
     ],
@@ -93,6 +96,8 @@ export default function ChatClient() {
     if (typeof window === "undefined") return [];
     return safeParseMessages(localStorage.getItem(STORAGE_KEY));
   }, []);
+
+  const { data: session, isPending: isAuthPending } = authClient.useSession();
 
   const { messages, setMessages, sendMessage, status, error } = useChat({
     transport: chatTransport,
@@ -182,16 +187,44 @@ export default function ChatClient() {
     router.replace("/chat", { scroll: false });
   }, [checkout, hasProcessedCheckout, router]);
 
+  const appendLoginRequiredMessage = () => {
+    setLocalMessages((prev) =>
+      uniqById([
+        ...prev,
+        {
+          id: `login-required-${Date.now()}`,
+          role: "assistant",
+          parts: [
+            {
+              type: "text",
+              text: JSON.stringify({ type: "login-required" }),
+            },
+          ],
+        },
+      ]),
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
 
+    if (isAuthPending) return;
+
+    if (!session) {
+      localStorage.setItem("redirectAfterLogin", "/chat");
+      appendLoginRequiredMessage();
+      setInput("");
+      return;
+    }
+
     sendMessage({ text });
     setInput("");
   };
 
-  const isLoading = status === "streaming" || status === "submitted";
+  const isLoading =
+    isAuthPending || status === "streaming" || status === "submitted";
 
   const allMessages: UIMessage[] = uniqById([
     ...INITIAL_MESSAGES,

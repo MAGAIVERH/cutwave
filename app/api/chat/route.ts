@@ -7,11 +7,19 @@ import {
   checkoutUIMessageStreamResponse,
   errorUIMessageStreamResponse,
   extractPendingBooking,
+  formatIsoDateUs,
   getAppBaseUrl,
+  getChatTodayContext,
   getLastUserText,
   isConfirmCommand,
+  isIsoDateBeforeToday,
+  isValidIsoDate,
+  loginRequiredUIMessageStreamResponse,
+  parseIsoDateOnly,
   sliceChatMessagesForApi,
+  suggestUpcomingIsoDates,
 } from "@/lib/chat-utils";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /** gemini-2.0-flash free tier often hits quota limit:0; 2.5-flash works on the same key */
@@ -45,6 +53,11 @@ export const POST = async (request: Request) => {
       return errorUIMessageStreamResponse(
         "Chat is not configured. Set GOOGLE_GENERATIVE_AI_API_KEY in your environment.",
       );
+    }
+
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user?.id) {
+      return loginRequiredUIMessageStreamResponse();
     }
 
     const body = await request.json();
@@ -88,6 +101,12 @@ export const POST = async (request: Request) => {
         return checkoutUIMessageStreamResponse(response.url);
       } catch (error) {
         console.error("Checkout error:", error);
+        const message =
+          error instanceof Error ? error.message : String(error);
+
+        if (message.includes("Unauthorized") || message.includes("401")) {
+          return loginRequiredUIMessageStreamResponse();
+        }
 
         return errorUIMessageStreamResponse(
           "Sorry, we could not start checkout. Please try again or contact support.",
@@ -95,13 +114,11 @@ export const POST = async (request: Request) => {
       }
     }
 
-    const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-    const isoDate = new Date().toISOString().split("T")[0];
+    const { today, isoDate, todayUs } = getChatTodayContext();
+    const suggestedDates = suggestUpcomingIsoDates(5).map((d) => ({
+      iso: d,
+      label: formatIsoDateUs(d),
+    }));
 
     const result = streamText({
       model: google(CHAT_MODEL),
@@ -110,7 +127,21 @@ export const POST = async (request: Request) => {
       system: `
 You are CutWave Assistant, a virtual barbershop booking assistant.
 
-TODAY: ${today} (${isoDate})
+TODAY: ${today}
+TODAY (ISO): ${isoDate}
+TODAY (US): ${todayUs}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATE RULES (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- TODAY (${isoDate}) is the only source of truth for "today".
+- Compare booking dates as YYYY-MM-DD strings against TODAY.
+- A date is in the past only if it is strictly BEFORE ${isoDate} (not equal).
+- Example: ${isoDate} means 06/04/${isoDate.slice(0, 4)} — 05/10/${isoDate.slice(0, 4)} is in the past; 06/10/${isoDate.slice(0, 4)} is valid.
+- Always call getAvailableTimeSlotsForBarbershop to validate dates; relay tool errors clearly.
+- If a date is in the past, explain using MM/DD/YYYY and suggest: ${suggestedDates.map((d) => d.label).join(", ")} (ISO: ${suggestedDates.map((d) => d.iso).join(", ")}).
+- Ask for dates in YYYY-MM-DD format and confirm the month (05 = May, 06 = June).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LANGUAGE (CRITICAL)
@@ -236,7 +267,40 @@ When calling getAvailableTimeSlotsForBarbershop, use exact serviceId values from
         }),
         execute: async ({ barbershopId, serviceId, date }) => {
           try {
-            const timestamp = new Date(date).getTime();
+            if (!isValidIsoDate(date)) {
+              return {
+                error: "INVALID_DATE_FORMAT",
+                message:
+                  "Use a valid date in YYYY-MM-DD format (example: 2026-06-10).",
+                today: isoDate,
+                todayFormatted: todayUs,
+              };
+            }
+
+            if (isIsoDateBeforeToday(date, isoDate)) {
+              return {
+                error: "PAST_DATE",
+                message: `${formatIsoDateUs(date)} is before today (${todayUs}). Please pick today or a future date.`,
+                requestedDate: date,
+                requestedDateFormatted: formatIsoDateUs(date),
+                today: isoDate,
+                todayFormatted: todayUs,
+                suggestedDates: suggestUpcomingIsoDates(5).map((d) => ({
+                  iso: d,
+                  label: formatIsoDateUs(d),
+                })),
+              };
+            }
+
+            const parsed = parseIsoDateOnly(date);
+            if (!parsed) {
+              return {
+                error: "INVALID_DATE",
+                message: "Could not parse the date. Use YYYY-MM-DD format.",
+              };
+            }
+
+            const timestamp = parsed.getTime();
 
             const booked: string[] = await fetchJson(
               `${baseUrl}/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}`,

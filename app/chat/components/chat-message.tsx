@@ -5,6 +5,7 @@ import { Bot } from "lucide-react";
 import { Streamdown } from "streamdown";
 
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -34,11 +35,14 @@ export const ChatMessage = ({
 
   const content = contentFromParts || legacyContent;
 
-  // 🔍 Tenta detectar se é um checkout
   let checkoutData: { type: string; checkoutUrl: string } | null = null;
+  let loginRequired = false;
 
   try {
     const parsed = JSON.parse(content);
+    if (parsed?.type === "login-required") {
+      loginRequired = true;
+    }
     if (
       parsed?.type === "checkout" &&
       parsed?.checkoutUrl &&
@@ -47,8 +51,22 @@ export const ChatMessage = ({
       checkoutData = parsed;
     }
   } catch {
-    // Não é JSON, renderiza texto normal
+    // Not a structured payload — render as plain text
   }
+
+  const handleSignIn = () => {
+    if (!localStorage.getItem("redirectAfterLogin")) {
+      localStorage.setItem("redirectAfterLogin", "/chat");
+    }
+
+    const redirect = localStorage.getItem("redirectAfterLogin") ?? "/chat";
+    localStorage.removeItem("redirectAfterLogin");
+
+    authClient.signIn.social({
+      provider: "google",
+      callbackURL: redirect,
+    });
+  };
 
   if (isSystem) {
     return (
@@ -83,7 +101,23 @@ export const ChatMessage = ({
         </div>
 
         <div className="text-foreground max-w-full text-sm leading-[1.4] wrap-break-word">
-          {/* 💳 Botão de Checkout */}
+          {loginRequired && (
+            <div className="flex flex-col gap-3">
+              <p className="font-medium">Sign in to continue your booking</p>
+              <p className="text-muted-foreground text-sm">
+                Appointments are tied to your account. After signing in, you will
+                return here to finish scheduling.
+              </p>
+              <Button
+                className="w-fit rounded-full px-6"
+                size="lg"
+                onClick={handleSignIn}
+              >
+                Sign in with Google
+              </Button>
+            </div>
+          )}
+
           {checkoutData && (
             <div className="flex flex-col gap-3">
               <p className="font-medium">
@@ -107,8 +141,9 @@ export const ChatMessage = ({
             </div>
           )}
 
-          {/* 📝 Texto normal */}
-          {!checkoutData && <Streamdown>{content}</Streamdown>}
+          {!loginRequired && !checkoutData && (
+            <Streamdown>{content}</Streamdown>
+          )}
         </div>
       </div>
     </div>
