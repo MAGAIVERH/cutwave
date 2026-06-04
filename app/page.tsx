@@ -68,7 +68,7 @@ const Home = async () => {
           <SearchQuickFilters />
         </PageSectionScroller>
 
-        <div className="relative h-120 w-full overflow-hidden rounded-2xl">
+        <div className="relative h-120 w-full overflow-hidden rounded-2xl lg:h-72">
           <Image
             src={banner4}
             alt="Agende agora!"

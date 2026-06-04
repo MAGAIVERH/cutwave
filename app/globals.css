@@ -144,3 +144,14 @@
 .animate-wiggle {
   animation: wiggle 1s ease-in-out;
 }
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

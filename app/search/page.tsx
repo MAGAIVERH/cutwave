@@ -45,7 +45,7 @@ export default async function SearchPage(props: SearchPageProps) {
   return (
     <>
       <Header />
-      <div className="space-y-5 px-5 pt-5">
+      <div className="space-y-5 px-5 pt-5 lg:mx-auto lg:max-w-6xl">
         <SearchInput />
         <PageSectionScroller>
           <SearchQuickFilters />
@@ -61,7 +61,7 @@ export default async function SearchPage(props: SearchPageProps) {
           </p>
         )}
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {barbershops.map((shop) => (
             <BarbershopItem key={shop.id} barbershop={shop} />
           ))}

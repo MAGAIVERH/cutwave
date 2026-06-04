@@ -263,7 +263,7 @@ export const ReserveSheet = ({
         </SheetHeader>
 
         {/* CONTEÚDO */}
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="scrollbar-hide flex-1 overflow-y-auto px-4">
           {/* CALENDÁRIO */}
           <div className="mt-4">
             <Calendar
@@ -290,7 +290,7 @@ export const ReserveSheet = ({
             <>
               <Separator className="my-4" />
 
-              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
+              <div className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2">
                 {availableHours.map((hour) => {
                   const isBooked = bookedHours.includes(hour);
 

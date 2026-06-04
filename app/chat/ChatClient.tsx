@@ -195,7 +195,7 @@ export default function ChatClient() {
       </div>
 
       {/* Messages */}
-      <div className="w-full flex-1 overflow-y-auto px-4 py-3 [&::-webkit-scrollbar]:hidden">
+      <div className="scrollbar-hide w-full flex-1 overflow-y-auto px-4 py-3">
         {allMessages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}

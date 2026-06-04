@@ -51,8 +51,10 @@ const Header = () => {
   };
 
   return (
-    <header className="flex items-center justify-between px-5 pt-7">
-      <Image src="/logo.svg" alt="CutWave" width={100} height={26} />
+    <header className="flex w-full items-center justify-between px-5 pt-7 lg:mx-auto lg:max-w-6xl">
+      <Link href="/" aria-label="Go to home" className="cursor-pointer">
+        <Image src="/logo.svg" alt="CutWave" width={100} height={26} />
+      </Link>
       <div className="flex items-center gap-2">
         <Button variant="outline" size="icon">
           <Link href="/chat">
@@ -80,7 +82,7 @@ const Header = () => {
               <Separator />
             </div>
 
-            <PageContainer className="flex-1 overflow-y-auto">
+            <PageContainer className="scrollbar-hide flex-1 overflow-y-auto">
               {/* LOGIN / USER */}
               <PageSection>
                 <div className="flex items-center justify-between rounded-lg">

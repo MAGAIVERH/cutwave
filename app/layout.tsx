@@ -28,8 +28,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} scrollbar-hide`}
+    >
+      <body className="scrollbar-hide antialiased" suppressHydrationWarning>
         <AuthUIProvider>
           {children}
           <Toaster />

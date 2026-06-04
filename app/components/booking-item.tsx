@@ -28,7 +28,7 @@ const BookingItem = ({ booking, status = "confirmed" }: BookingItemProps) => {
   const label = status === "finished" ? "Finalizado" : "Confirmado";
 
   return (
-    <Card className="flex w-full min-w-[85%] flex-row items-center justify-between p-0">
+    <Card className="flex w-full min-w-[85%] flex-row items-center justify-between p-0 lg:min-w-0">
       {/* ESQUERDA */}
       <div className="flex flex-1 flex-col gap-3 p-4">
         <Badge variant={status === "finished" ? "secondary" : "default"}>

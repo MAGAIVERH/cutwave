@@ -59,7 +59,7 @@ export default async function AppointmentsPage() {
       {/* HEADER */}
       <Header />
       {/* CONTEÚDO COM SCROLL */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="scrollbar-hide flex-1 overflow-y-auto">
         <PageContainer className="space-y-6">
           <h1 className="text-lg font-bold">Agendamentos</h1>
 
