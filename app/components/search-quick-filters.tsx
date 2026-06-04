@@ -1,17 +1,22 @@
 "use client";
 
-import { Brush, Droplets,Eye, Scissors, Slice, Sparkles } from "lucide-react";
+import { Brush, Droplets, Eye, Scissors, Slice, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { CATEGORY_SLUGS, type CategorySlug } from "@/lib/search-categories";
 
-const filters = [
-  { label: "Cabelo", icon: Scissors, value: "cabelo" },
-  { label: "Barba", icon: Slice, value: "barba" },
-  { label: "Sobrancelha", icon: Eye, value: "sobrancelha" },
-  { label: "Massagem", icon: Sparkles, value: "massagem" },
-  { label: "Acabamento", icon: Brush, value: "acabamento" },
-  { label: "Hidratação", icon: Droplets, value: "hidratacao" },
+const filters: {
+  label: string;
+  icon: typeof Scissors;
+  value: CategorySlug;
+}[] = [
+  { label: CATEGORY_SLUGS.cabelo.label, icon: Scissors, value: "cabelo" },
+  { label: CATEGORY_SLUGS.barba.label, icon: Slice, value: "barba" },
+  { label: CATEGORY_SLUGS.sobrancelha.label, icon: Eye, value: "sobrancelha" },
+  { label: CATEGORY_SLUGS.massagem.label, icon: Sparkles, value: "massagem" },
+  { label: CATEGORY_SLUGS.acabamento.label, icon: Brush, value: "acabamento" },
+  { label: CATEGORY_SLUGS.hidratacao.label, icon: Droplets, value: "hidratacao" },
 ];
 
 const SearchQuickFilters = () => {

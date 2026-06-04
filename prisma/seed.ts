@@ -27,94 +27,87 @@ async function seedDatabase() {
       "https://utfs.io/f/07842cfb-7b30-4fdc-accc-719618dfa1f2-17s.png",
       "https://utfs.io/f/0522fdaf-0357-4213-8f52-1d83c3dcb6cd-18e.png",
     ];
-    // Nomes criativos para as barbearias
+
     const creativeNames = [
-      "Barbearia Vintage",
-      "Corte & Estilo",
-      "Barba & Navalha",
+      "Vintage Barber Shop",
+      "Cut & Style",
+      "Beard & Razor",
       "The Dapper Den",
-      "Cabelo & Cia.",
-      "Machado & Tesoura",
-      "Barbearia Elegance",
-      "Aparência Impecável",
-      "Estilo Urbano",
-      "Estilo Clássico",
+      "Hair & Co.",
+      "Axe & Scissors",
+      "Elegance Barbershop",
+      "Impeccable Look",
+      "Urban Style",
+      "Classic Style",
     ];
 
-    // Endereços fictícios para as barbearias
     const addresses = [
-      "Rua da Barbearia, 123",
-      "Avenida dos Cortes, 456",
-      "Praça da Barba, 789",
-      "Travessa da Navalha, 101",
-      "Alameda dos Estilos, 202",
-      "Estrada do Machado, 303",
-      "Avenida Elegante, 404",
-      "Praça da Aparência, 505",
-      "Rua Urbana, 606",
-      "Avenida Clássica, 707",
+      "Barber Street, 123",
+      "Cuts Avenue, 456",
+      "Beard Square, 789",
+      "Razor Lane, 101",
+      "Styles Boulevard, 202",
+      "Axe Road, 303",
+      "Elegant Avenue, 404",
+      "Appearance Plaza, 505",
+      "Urban Street, 606",
+      "Classic Avenue, 707",
     ];
 
     const services = [
       {
-        name: "Corte de Cabelo",
-        description: "Estilo personalizado com as últimas tendências.",
+        name: "Haircut",
+        description: "Personalized style with the latest trends.",
         price: 60.0,
         imageUrl:
           "https://utfs.io/f/0ddfbd26-a424-43a0-aaf3-c3f1dc6be6d1-1kgxo7.png",
       },
       {
-        name: "Barba",
-        description: "Modelagem completa para destacar sua masculinidade.",
+        name: "Beard",
+        description: "Full shaping to highlight your look.",
         price: 40.0,
         imageUrl:
           "https://utfs.io/f/e6bdffb6-24a9-455b-aba3-903c2c2b5bde-1jo6tu.png",
       },
       {
-        name: "Pézinho",
-        description: "Acabamento perfeito para um visual renovado.",
+        name: "Lineup",
+        description: "Clean neckline finish for a fresh look.",
         price: 35.0,
         imageUrl:
           "https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
       },
       {
-        name: "Sobrancelha",
-        description: "Expressão acentuada com modelagem precisa.",
+        name: "Eyebrows",
+        description: "Precise shaping for a defined expression.",
         price: 20.0,
         imageUrl:
           "https://utfs.io/f/2118f76e-89e4-43e6-87c9-8f157500c333-b0ps0b.png",
       },
       {
-        name: "Massagem",
-        description: "Relaxe com uma massagem revigorante.",
+        name: "Massage",
+        description: "Relax with a revitalizing massage.",
         price: 50.0,
         imageUrl:
           "https://utfs.io/f/c4919193-a675-4c47-9f21-ebd86d1c8e6a-4oen2a.png",
       },
       {
-        name: "Hidratação",
-        description: "Hidratação profunda para cabelo e barba.",
+        name: "Hydration",
+        description: "Deep hydration for hair and beard.",
         price: 25.0,
         imageUrl:
           "https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
       },
     ];
 
-    // Criar 10 barbearias com nomes e endereços fictícios
-    const barbershops = [];
     for (let i = 0; i < 10; i++) {
-      const name = creativeNames[i];
-      const address = addresses[i];
-      const imageUrl = images[i];
-
       const barbershop = await prisma.barbershop.create({
         data: {
-          name,
-          address,
-          imageUrl: imageUrl,
+          name: creativeNames[i],
+          address: addresses[i],
+          imageUrl: images[i],
           phones: ["(11) 99999-9999", "(11) 99999-9999"],
           description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus. Phasellus pharetra erat ac libero efficitur tempus. Donec pretium convallis iaculis. Etiam eu felis sollicitudin, cursus mi vitae, iaculis magna. Nam non erat neque. In hac habitasse platea dictumst. Pellentesque molestie accumsan tellus id laoreet.",
+            "Premium barbershop offering classic cuts, beard care, and grooming services in a welcoming atmosphere.",
         },
       });
 
@@ -133,14 +126,11 @@ async function seedDatabase() {
           },
         });
       }
-
-      barbershops.push(barbershop);
     }
 
-    // Fechar a conexão com o banco de dados
     await prisma.$disconnect();
   } catch (error) {
-    console.error("Erro ao criar as barbearias:", error);
+    console.error("Error seeding barbershops:", error);
   }
 }
 

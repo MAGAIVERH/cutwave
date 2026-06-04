@@ -53,7 +53,7 @@ const BarbershopPage = async ({
   if (!barbershop) {
     return (
       <PageContainer>
-        <p className="text-foreground">Barbearia não encontrada.</p>
+        <p className="text-foreground">Barbershop not found.</p>
       </PageContainer>
     );
   }
@@ -99,7 +99,7 @@ const BarbershopPage = async ({
         <Separator />
         {/* SOBRE NÓS  */}
         <PageSection>
-          <PageSectionTitle>Sobre nós</PageSectionTitle>
+          <PageSectionTitle>About us</PageSectionTitle>
           <p className="text-muted-foreground text-sm leading-relaxed">
             {barbershop.description}
           </p>
@@ -108,7 +108,7 @@ const BarbershopPage = async ({
 
         {/* SERVIÇOS  */}
         <PageSection>
-          <PageSectionTitle>Serviços</PageSectionTitle>
+          <PageSectionTitle>Services</PageSectionTitle>
 
           <div className="space-y-4">
             {barbershop.services.map(
@@ -121,7 +121,7 @@ const BarbershopPage = async ({
 
         {/* CONTATO */}
         <PageSection>
-          <PageSectionTitle>Contato</PageSectionTitle>
+          <PageSectionTitle>Contact</PageSectionTitle>
 
           <div className="space-y-2">
             {barbershop.phones.map(

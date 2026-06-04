@@ -20,7 +20,7 @@ const INITIAL_MESSAGES: UIMessage[] = [
     parts: [
       {
         type: "text",
-        text: "Seu assistente de agendamentos está online.",
+        text: "Your booking assistant is online.",
       },
     ],
   },
@@ -31,14 +31,14 @@ const INITIAL_MESSAGES: UIMessage[] = [
       {
         type: "text",
         text:
-          "Olá! Sou o CutWave, seu assistente pessoal. 👋\n\n" +
-          "Estou aqui para te ajudar a agendar seu corte ou barba. " +
-          "Vou te guiar pelo processo:\n\n" +
-          "1️⃣ Escolher a barbearia\n" +
-          "2️⃣ Selecionar o serviço\n" +
-          "3️⃣ Definir data e horário\n" +
-          "4️⃣ Confirmar e pagar\n\n" +
-          "Como posso te ajudar hoje? 😊",
+          "Hi! I'm CutWave, your personal assistant. 👋\n\n" +
+          "I'm here to help you book a haircut or beard trim. " +
+          "I'll guide you through:\n\n" +
+          "1️⃣ Choose a barbershop\n" +
+          "2️⃣ Select a service\n" +
+          "3️⃣ Pick date and time\n" +
+          "4️⃣ Confirm and pay\n\n" +
+          "How can I help you today? 😊",
       },
     ],
   },
@@ -79,8 +79,11 @@ export default function ChatClient() {
     return safeParseMessages(localStorage.getItem(STORAGE_KEY));
   }, []);
 
-  const { messages, setMessages, sendMessage, status } = useChat({
+  const { messages, setMessages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
+    onError: (err) => {
+      console.error("Chat error:", err);
+    },
   });
 
   // Reidratação do chat
@@ -127,13 +130,13 @@ export default function ChatClient() {
               {
                 type: "text",
                 text:
-                  "🎉 **Pagamento confirmado!**\n\n" +
-                  "Seu agendamento foi realizado com sucesso. Obrigado por escolher o CutWave! ✂️\n\n" +
-                  "📌 **Onde ver seus agendamentos:**\n" +
-                  "1. Abra o **Menu**\n" +
-                  "2. Toque em **Agendamentos**\n" +
-                  "3. Veja **data, horário e status** do serviço\n\n" +
-                  "Se quiser agendar outro serviço, é só me dizer! 😊",
+                  "🎉 **Payment confirmed!**\n\n" +
+                  "Your appointment was booked successfully. Thank you for choosing CutWave! ✂️\n\n" +
+                  "📌 **Where to view your appointments:**\n" +
+                  "1. Open the **Menu**\n" +
+                  "2. Tap **Appointments**\n" +
+                  "3. See **date, time, and status** for your service\n\n" +
+                  "If you'd like to book another service, just let me know! 😊",
               },
             ],
           },
@@ -152,8 +155,8 @@ export default function ChatClient() {
               {
                 type: "text",
                 text:
-                  "❌ Pagamento cancelado.\n\n" +
-                  "Sem problemas! Se quiser, posso te ajudar a escolher outro dia ou horário. 😊",
+                  "❌ Payment cancelled.\n\n" +
+                  "No worries! I can help you pick another date or time if you'd like. 😊",
               },
             ],
           },
@@ -199,6 +202,12 @@ export default function ChatClient() {
         {allMessages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
+        {error && (
+          <div className="border-destructive/30 bg-destructive/10 text-destructive mx-4 mt-4 rounded-xl border p-3 text-sm">
+            Something went wrong. Check your connection and API keys, then try
+            again.
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

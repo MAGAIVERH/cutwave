@@ -25,7 +25,7 @@ interface BookingItemProps {
 }
 
 const BookingItem = ({ booking, status = "confirmed" }: BookingItemProps) => {
-  const label = status === "finished" ? "Finalizado" : "Confirmado";
+  const label = status === "finished" ? "Completed" : "Confirmed";
 
   return (
     <Card className="flex w-full min-w-[85%] flex-row items-center justify-between p-0 lg:min-w-0">
@@ -53,15 +53,15 @@ const BookingItem = ({ booking, status = "confirmed" }: BookingItemProps) => {
       {/* DIREITA */}
       <div className="flex flex-col items-center justify-center border-l px-4">
         <p className="text-xs capitalize">
-          {booking.date.toLocaleDateString("pt-BR", { month: "long" })}
+          {booking.date.toLocaleDateString("en-US", { month: "long" })}
         </p>
 
         <p className="text-lg font-bold">
-          {booking.date.toLocaleDateString("pt-BR", { day: "2-digit" })}
+          {booking.date.toLocaleDateString("en-US", { day: "2-digit" })}
         </p>
 
         <p className="text-xs">
-          {booking.date.toLocaleTimeString("pt-BR", {
+          {booking.date.toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })}

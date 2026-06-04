@@ -11,7 +11,7 @@ export function CopyButton({ value }: CopyButtonProps) {
   const copy = async () => {
     await navigator.clipboard.writeText(value);
 
-    toast.success("Número copiado com sucesso", {
+    toast.success("Phone number copied", {
       duration: 2000,
     });
   };
@@ -22,7 +22,7 @@ export function CopyButton({ value }: CopyButtonProps) {
       className="text-primary flex items-center gap-1 text-sm"
     >
       <Copy className="h-4 w-4" />
-      Copiar
+      Copy
     </button>
   );
 }

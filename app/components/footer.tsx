@@ -8,13 +8,13 @@ const Footer = () => {
       <span className="text-muted-foreground hidden md:inline">•</span>
 
       <p className="text-foreground text-sm font-medium">
-        Feito por Magaiver Magalhães
+        Made by Magaiver Magalhães
       </p>
 
       <span className="text-muted-foreground hidden md:inline">•</span>
 
       <p className="text-muted-foreground text-xs md:text-sm">
-        Todos os direitos reservados.
+        All rights reserved.
       </p>
     </footer>
   );

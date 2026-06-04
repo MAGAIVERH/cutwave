@@ -3,6 +3,13 @@ import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import { cookies } from "next/headers";
 import z from "zod";
 
+import {
+  checkoutUIMessageStreamResponse,
+  errorUIMessageStreamResponse,
+  getAppBaseUrl,
+  getLastUserText,
+  isConfirmCommand,
+} from "@/lib/chat-utils";
 import { prisma } from "@/lib/prisma";
 
 async function fetchJson(url: string, options?: RequestInit) {
@@ -16,29 +23,15 @@ async function fetchJson(url: string, options?: RequestInit) {
 
 export const POST = async (request: Request) => {
   const { messages } = await request.json();
+  const baseUrl = getAppBaseUrl(request);
+  const userText = getLastUserText(messages);
 
-  const lastUserMessage = [...messages]
-    .reverse()
-    .find((m: any) => m.role === "user");
-
-  const userText =
-    lastUserMessage?.content && typeof lastUserMessage.content === "string"
-      ? lastUserMessage.content.trim().toLowerCase()
-      : "";
-
-  console.log("🔍 Última mensagem do usuário:", userText);
-
-  /**
-   * 🔥 INTERCEPTA "CONFIRMAR" ANTES DA IA
-   */
-  if (userText === "confirmar") {
-    console.log("✅ Detectou 'confirmar' - criando checkout...");
-
+  if (isConfirmCommand(userText)) {
     const cookieStore = await cookies();
 
     try {
       const response = await fetchJson(
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/stripe/create-booking-checkout-session`,
+        `${baseUrl}/api/stripe/create-booking-checkout-session`,
         {
           method: "POST",
           headers: {
@@ -49,141 +42,113 @@ export const POST = async (request: Request) => {
         },
       );
 
-      console.log("✅ Checkout criado:", response.url);
-
-      // Retorna estrutura EXATA que o frontend espera
-      return new Response(
-        JSON.stringify({
-          id: `checkout-${Date.now()}`,
-          role: "assistant",
-          content: JSON.stringify({
-            type: "checkout",
-            checkoutUrl: response.url,
-          }),
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      return checkoutUIMessageStreamResponse(response.url);
     } catch (error) {
-      console.error("❌ Erro ao criar checkout:", error);
+      console.error("Checkout error:", error);
 
-      return new Response(
-        JSON.stringify({
-          id: `error-${Date.now()}`,
-          role: "assistant",
-          content:
-            "❌ Desculpe, houve um erro ao processar o pagamento. Por favor, tente novamente ou entre em contato com o suporte.",
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
+      return errorUIMessageStreamResponse(
+        "Sorry, we could not start checkout. Please try again or contact support.",
       );
     }
   }
 
-  /**
-   * 🤖 IA para conversa normal (NUNCA deve confirmar agendamento)
-   */
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const isoDate = new Date().toISOString().split("T")[0];
+
   const result = streamText({
     model: google("gemini-2.0-flash"),
     stopWhen: stepCountIs(12),
 
     system: `
-Você é o Agenda.ai, assistente virtual de agendamento de barbearias.
+You are CutWave Assistant, a virtual barbershop booking assistant.
 
-DATA ATUAL: ${new Date().toLocaleDateString("pt-BR")} (${new Date().toISOString().split("T")[0]})
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ REGRA CRÍTICA - LEIA COM ATENÇÃO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-VOCÊ NUNCA DEVE:
-❌ Confirmar agendamento
-❌ Dizer "agendamento confirmado"
-❌ Dizer "tudo pronto"
-❌ Mencionar que o processo acabou
-❌ Criar links de pagamento
-
-SUA ÚNICA FUNÇÃO:
-✅ Ajudar o usuário a escolher:
-   - Barbearia
-   - Serviço
-   - Data
-   - Horário
-✅ Mostrar o resumo de confirmação
-✅ PARAR e AGUARDAR o usuário digitar "confirmar"
+TODAY: ${today} (${isoDate})
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 FLUXO DE CONVERSA
+CRITICAL RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Estado interno que você DEVE manter:
-- barbeariaSelecionada: { id, nome, endereço }
-- servicoSelecionado: { id, nome, preço }
-- dataSelecionada: (formato YYYY-MM-DD)
-- horarioSelecionado: (formato HH:MM)
+YOU MUST NEVER:
+- Confirm a booking
+- Say "booking confirmed" or "all set"
+- Create payment links
+- Mention that the process is complete
 
-Ordem OBRIGATÓRIA:
-1️⃣ Perguntar qual barbearia → usar searchBarbershops
-2️⃣ Perguntar qual serviço
-3️⃣ Perguntar qual data
-4️⃣ Mostrar horários disponíveis → usar getAvailableTimeSlotsForBarbershop
-5️⃣ Usuário escolhe horário
-6️⃣ MOSTRAR RESUMO (veja abaixo)
-7️⃣ PARAR e aguardar
+YOUR ROLE:
+- Help the user choose: barbershop, service, date, time slot
+- Show the confirmation summary
+- STOP and wait for the user to type "confirm"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 RESUMO DE CONFIRMAÇÃO (COPIE EXATAMENTE)
+CONVERSATION FLOW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Quando o usuário escolher TODOS os dados, mostre EXATAMENTE isto:
+Keep internal state:
+- selectedBarbershop: { id, name, address }
+- selectedService: { id, name, price }
+- selectedDate: YYYY-MM-DD
+- selectedTime: HH:MM
+
+Required order:
+1. Ask which barbershop → use searchBarbershops
+2. Ask which service
+3. Ask which date
+4. Show available slots → use getAvailableTimeSlotsForBarbershop
+5. User picks a time
+6. SHOW SUMMARY (see below)
+7. STOP and wait
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONFIRMATION SUMMARY (COPY EXACTLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When the user has chosen everything, show exactly:
 
 ━━━━━━━━━━━━━━━━━━━━
-🧾 **Confira se está tudo certo:**
+🧾 **Please review your booking:**
 
-✅ **Confirme seu agendamento**
+✅ **Confirm your appointment**
 
-🏪 **Barbearia:** [nome]
-📍 **Endereço:** [endereço completo]
-💈 **Serviço:** [nome do serviço]
-📅 **Data:** [DD/MM/YYYY]
-🕐 **Horário:** [HH:MM]
-💰 **Valor:** R$ [preço]
+🏪 **Barbershop:** [name]
+📍 **Address:** [full address]
+💈 **Service:** [service name]
+📅 **Date:** [MM/DD/YYYY]
+🕐 **Time:** [HH:MM]
+💰 **Price:** $[price]
 
-Digite **confirmar** para prosseguir com o pagamento ou **não** para alterar.
+Type **confirm** to proceed to payment or **no** to change something.
 ━━━━━━━━━━━━━━━━━━━━
 
-⚠️ APÓS MOSTRAR ESTE RESUMO:
-- NÃO adicione mais nada
-- NÃO diga "confirmado"
-- NÃO crie botões ou links
-- APENAS aguarde a resposta do usuário
+After this summary:
+- Do not add anything else
+- Do not say "confirmed"
+- Do not create buttons or links
+- Only wait for the user
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔧 FERRAMENTAS
+TOOLS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Use para buscar dados reais do banco:
-- searchBarbershops: busca barbearias
-- getAvailableTimeSlotsForBarbershop: busca horários disponíveis
+- searchBarbershops: find barbershops in the database
+- getAvailableTimeSlotsForBarbershop: find available time slots
 
-SEMPRE mostre opções reais do banco de dados.
+Always show real options from the database.
 `,
 
     messages: convertToModelMessages(messages),
 
     tools: {
       searchBarbershops: tool({
-        description: "Busca barbearias reais do banco de dados",
+        description: "Search barbershops in the database",
         inputSchema: z.object({
-          name: z.string().optional().describe("Nome da barbearia (opcional)"),
+          name: z.string().optional().describe("Barbershop name (optional)"),
         }),
         execute: async ({ name }) => {
-          console.log("🔍 Buscando barbearias...", { name });
-
           const data = await prisma.barbershop.findMany({
             where: name
               ? { name: { contains: name, mode: "insensitive" } }
@@ -191,8 +156,6 @@ SEMPRE mostre opções reais do banco de dados.
             include: { services: true },
             take: 5,
           });
-
-          console.log(`✅ Encontradas ${data.length} barbearias`);
 
           return {
             barbershops: data.map((b: (typeof data)[number]) => ({
@@ -202,7 +165,7 @@ SEMPRE mostre opções reais do banco de dados.
               services: b.services.map((s: (typeof b.services)[number]) => ({
                 id: s.id,
                 name: s.name,
-                price: `R$ ${(s.priceInCents / 100).toFixed(2)}`,
+                price: `$${(s.priceInCents / 100).toFixed(2)}`,
               })),
             })),
           };
@@ -210,29 +173,19 @@ SEMPRE mostre opções reais do banco de dados.
       }),
 
       getAvailableTimeSlotsForBarbershop: tool({
-        description: "Busca horários disponíveis para agendamento",
+        description: "Get available booking time slots",
         inputSchema: z.object({
-          barbershopId: z.string().describe("ID da barbearia"),
-          serviceId: z.string().describe("ID do serviço"),
-          date: z
-            .string()
-            .describe("Data no formato YYYY-MM-DD (ex: 2025-12-31)"),
+          barbershopId: z.string().describe("Barbershop ID"),
+          serviceId: z.string().describe("Service ID"),
+          date: z.string().describe("Date in YYYY-MM-DD format"),
         }),
         execute: async ({ barbershopId, serviceId, date }) => {
-          console.log("🔍 Buscando horários disponíveis...", {
-            barbershopId,
-            serviceId,
-            date,
-          });
-
           try {
             const timestamp = new Date(date).getTime();
 
             const booked: string[] = await fetchJson(
-              `${process.env.NEXT_PUBLIC_APP_URL}/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}`,
+              `${baseUrl}/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}`,
             );
-
-            console.log(`⏰ Horários ocupados:`, booked);
 
             const allSlots: string[] = [];
             for (let h = 9; h < 19; h++) {
@@ -242,18 +195,16 @@ SEMPRE mostre opções reais do banco de dados.
 
             const available = allSlots.filter((s) => !booked.includes(s));
 
-            console.log(`✅ Horários disponíveis:`, available.length);
-
             return {
               availableTimeSlots:
                 available.length > 0
                   ? available
-                  : ["Nenhum horário disponível nesta data"],
+                  : ["No time slots available on this date"],
             };
           } catch (error) {
-            console.error("❌ Erro ao buscar horários:", error);
+            console.error("Time slots error:", error);
             return {
-              availableTimeSlots: ["Erro ao verificar disponibilidade"],
+              availableTimeSlots: ["Could not check availability"],
             };
           }
         },

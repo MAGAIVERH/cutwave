@@ -18,8 +18,7 @@ export const ChatMessage = ({
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
 
-  // Extrai texto do message
-  const content = message.parts
+  const contentFromParts = message.parts
     .map((part) => {
       if (part.type === "text" && "text" in part) {
         return String(part.text);
@@ -27,6 +26,13 @@ export const ChatMessage = ({
       return "";
     })
     .join("");
+
+  const legacyContent =
+    "content" in message && typeof message.content === "string"
+      ? message.content
+      : "";
+
+  const content = contentFromParts || legacyContent;
 
   // 🔍 Tenta detectar se é um checkout
   let checkoutData: { type: string; checkoutUrl: string } | null = null;
@@ -81,10 +87,10 @@ export const ChatMessage = ({
           {checkoutData && (
             <div className="flex flex-col gap-3">
               <p className="font-medium">
-                ✅ Perfeito! Tudo pronto para finalizar seu agendamento.
+                ✅ All set! Ready to complete your booking.
               </p>
               <p className="text-muted-foreground text-sm">
-                Clique no botão abaixo para prosseguir com o pagamento seguro:
+                Click the button below to proceed to secure payment:
               </p>
 
               <Button
@@ -96,7 +102,7 @@ export const ChatMessage = ({
                   window.location.href = checkoutData.checkoutUrl;
                 }}
               >
-                💳 Pagar agora
+                💳 Pay now
               </Button>
             </div>
           )}

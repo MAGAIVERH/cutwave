@@ -7,7 +7,7 @@
 //     <div className="flex items-center gap-2">
 //       <Input
 //         type="text"
-//         placeholder="Pesquise serviços ou barbearias..."
+//         placeholder="Search services or barbershops..."
 //         className="border-border rounded-full"
 //       />
 //       <Button variant="default" size="icon" className="rounded-full">
@@ -47,7 +47,7 @@ const SearchInput = () => {
     <div className="flex items-center gap-2">
       <Input
         type="text"
-        placeholder="Pesquise serviços ou barbearias..."
+        placeholder="Search services or barbershops..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleEnter}

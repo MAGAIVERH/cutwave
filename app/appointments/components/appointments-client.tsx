@@ -29,7 +29,7 @@ const AppointmentsClient = ({
       {confirmed.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-muted-foreground text-xs font-semibold uppercase">
-            Confirmados
+            Confirmed
           </h2>
 
           {confirmed.map((booking) => (
@@ -53,7 +53,7 @@ const AppointmentsClient = ({
       {finished.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-muted-foreground text-xs font-semibold uppercase">
-            Finalizados
+            Completed
           </h2>
 
           {finished.map((booking) => (

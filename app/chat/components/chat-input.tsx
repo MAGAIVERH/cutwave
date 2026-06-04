@@ -31,7 +31,7 @@ export const ChatInput = ({
           value={input}
           onChange={onChange}
           onKeyDown={handleKeyDown}
-          placeholder="Digite sua mensagem"
+          placeholder="Type your message"
           className="bg-accent flex-1 rounded-full px-4 py-3 text-[16px]"
           disabled={isLoading}
         />

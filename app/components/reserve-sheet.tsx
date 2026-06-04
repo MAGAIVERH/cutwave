@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -99,7 +99,7 @@ export const ReserveSheet = ({
   /* FORMATAÇÕES */
 
   const formattedDate = selectedDate
-    ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR })
+    ? format(selectedDate, "MMMM d", { locale: enUS })
     : "";
 
   /* REGRA 1: HORÁRIOS QUE NÃO PASSARAM */
@@ -235,7 +235,7 @@ export const ReserveSheet = ({
         }
       }
 
-      toast.error("Não foi possível iniciar o pagamento.");
+      toast.error("Could not start payment.");
       return;
     }
 
@@ -243,7 +243,7 @@ export const ReserveSheet = ({
     const data = await response.json();
 
     if (!data.url) {
-      toast.error("Sessão de pagamento inválida.");
+      toast.error("Invalid payment session.");
       return;
     }
 
@@ -259,7 +259,7 @@ export const ReserveSheet = ({
       <SheetContent side="right" className="flex h-full w-[80%] flex-col p-0">
         {/* HEADER */}
         <SheetHeader className="border-b p-4">
-          <SheetTitle>Fazer Reserva</SheetTitle>
+          <SheetTitle>Book appointment</SheetTitle>
         </SheetHeader>
 
         {/* CONTEÚDO */}
@@ -270,7 +270,7 @@ export const ReserveSheet = ({
               mode="single"
               selected={selectedDate}
               onSelect={handleDateSelect}
-              locale={ptBR}
+              locale={enUS}
               className="w-full"
               // bloqueia dias passados
               disabled={(date) => {
@@ -325,25 +325,25 @@ export const ReserveSheet = ({
                 <div className="flex justify-between font-medium">
                   <span>{serviceName}</span>
                   <span>
-                    {(servicePrice / 100).toLocaleString("pt-BR", {
+                    {(servicePrice / 100).toLocaleString("en-US", {
                       style: "currency",
-                      currency: "BRL",
+                      currency: "USD",
                     })}
                   </span>
                 </div>
 
                 <div className="text-muted-foreground flex justify-between">
-                  <span>Data</span>
+                  <span>Date</span>
                   <span>{formattedDate}</span>
                 </div>
 
                 <div className="text-muted-foreground flex justify-between">
-                  <span>Horário</span>
+                  <span>Time</span>
                   <span>{selectedHour}</span>
                 </div>
 
                 <div className="text-muted-foreground flex justify-between">
-                  <span>Barbearia</span>
+                  <span>Barbershop</span>
                   <span>{barbershopName}</span>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export const ReserveSheet = ({
             disabled={!isConfirmEnabled}
             onClick={handleConfirm}
           >
-            Confirmar
+            Confirm
           </Button>
         </div>
       </SheetContent>
@@ -370,28 +370,28 @@ export const ReserveSheet = ({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Você já possui um agendamento</AlertDialogTitle>
+            <AlertDialogTitle>You already have a booking</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>Você já tem um serviço agendado nesse mesmo horário.</p>
+              <p>You already have a service booked at this time.</p>
 
               {conflictInfo && (
                 <div className="bg-muted space-y-1 rounded-lg p-3 text-sm">
                   {conflictInfo.barbershopName && (
                     <p>
-                      <span className="font-semibold">Barbearia: </span>
+                      <span className="font-semibold">Barbershop: </span>
                       {conflictInfo.barbershopName}
                     </p>
                   )}
                   {conflictInfo.serviceName && (
                     <p>
-                      <span className="font-semibold">Serviço: </span>
+                      <span className="font-semibold">Service: </span>
                       {conflictInfo.serviceName}
                     </p>
                   )}
                   {conflictInfo.date && (
                     <p>
-                      <span className="font-semibold">Data: </span>
-                      {new Date(conflictInfo.date).toLocaleString("pt-BR")}
+                      <span className="font-semibold">Date: </span>
+                      {new Date(conflictInfo.date).toLocaleString("en-US")}
                     </p>
                   )}
                 </div>
@@ -400,7 +400,7 @@ export const ReserveSheet = ({
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogAction>Entendi</AlertDialogAction>
+            <AlertDialogAction>Got it</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

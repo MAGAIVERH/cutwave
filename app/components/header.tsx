@@ -99,7 +99,7 @@ const Header = () => {
                     className="hover:text-accent flex items-center gap-2 text-sm transition-colors"
                   >
                     <Home className="h-4 w-4" />
-                    <span>Início</span>
+                    <span>Home</span>
                   </Link>
 
                   <Link
@@ -108,7 +108,7 @@ const Header = () => {
                     className="hover:text-accent flex items-center gap-2 text-sm transition-colors"
                   >
                     <Calendar className="h-4 w-4" />
-                    <span>Agendamentos</span>
+                    <span>Appointments</span>
                   </Link>
                 </nav>
               </PageSection>
@@ -117,7 +117,7 @@ const Header = () => {
 
               {/* CATEGORIAS */}
               <PageSection>
-                <PageSectionTitle>Categorias</PageSectionTitle>
+                <PageSectionTitle>Categories</PageSectionTitle>
 
                 <button
                   onClick={() => handleFilter("cabelo")}
@@ -125,7 +125,7 @@ const Header = () => {
                 >
                   <Scissors className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Cabelo
+                    Hair
                   </span>
                 </button>
 
@@ -135,7 +135,7 @@ const Header = () => {
                 >
                   <Slice className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Barba
+                    Beard
                   </span>
                 </button>
 
@@ -145,7 +145,7 @@ const Header = () => {
                 >
                   <Sparkles className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Acabamento
+                    Finish
                   </span>
                 </button>
 
@@ -155,7 +155,7 @@ const Header = () => {
                 >
                   <Eye className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Sobrancelha
+                    Eyebrows
                   </span>
                 </button>
 
@@ -165,7 +165,7 @@ const Header = () => {
                 >
                   <HandHeart className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Massagem
+                    Massage
                   </span>
                 </button>
 
@@ -175,7 +175,7 @@ const Header = () => {
                 >
                   <Droplets className="hover:text-accent h-4 w-4 transition-colors" />
                   <span className="hover:text-accent transition-colors">
-                    Hidratação
+                    Hydration
                   </span>
                 </button>
               </PageSection>
@@ -192,7 +192,7 @@ const Header = () => {
                   onClick={() => authClient.signOut()}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sair da conta
+                  Sign out
                 </Button>
               </div>
             )}

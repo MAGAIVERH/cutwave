@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "CutWave",
-  description: "Gerenciador de barbearias",
+  description: "Barbershop booking manager",
 };
 
 export default function RootLayout({

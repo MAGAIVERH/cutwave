@@ -3,6 +3,7 @@ import SearchInput from "@/app/components/search-input";
 import SearchQuickFilters from "@/app/components/search-quick-filters";
 import { PageSectionScroller } from "@/components/ui/page";
 import { prisma } from "@/lib/prisma";
+import { resolveSearchQuery } from "@/lib/search-categories";
 
 import Header from "../components/header";
 
@@ -13,28 +14,17 @@ interface SearchPageProps {
 }
 
 export default async function SearchPage(props: SearchPageProps) {
-  // Agora SIM: unwrapping correto
   const searchParams = await props.searchParams;
 
   const query = searchParams.query || "";
-
-  const filterLabels: Record<string, string> = {
-    cabelo: "Cabelo",
-    barba: "Barba",
-    acabamento: "Acabamento",
-    sobrancelha: "Sobrancelha",
-    massagem: "Massagem",
-    hidratacao: "Hidratação",
-  };
-
-  const displayQuery = filterLabels[query.toLowerCase()] || query;
+  const { displayLabel, dbQuery } = resolveSearchQuery(query);
 
   const barbershops = await prisma.barbershop.findMany({
     where: {
       services: {
         some: {
           name: {
-            contains: query,
+            contains: dbQuery,
             mode: "insensitive",
           },
         },
@@ -52,12 +42,12 @@ export default async function SearchPage(props: SearchPageProps) {
         </PageSectionScroller>
 
         <h2 className="mt-2 text-xl font-bold">
-          Resultados para: "{displayQuery}"
+          Results for: &quot;{displayLabel}&quot;
         </h2>
 
         {barbershops.length === 0 && (
           <p className="text-muted-foreground mt-2">
-            Nenhuma barbearia encontrada para "{displayQuery}".
+            No barbershops found for &quot;{displayLabel}&quot;.
           </p>
         )}
 

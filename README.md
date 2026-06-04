@@ -1,5 +1,21 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in the values:
+
+- `NEXT_PUBLIC_APP_URL` — e.g. `http://localhost:3000` (required for chat tools and Stripe redirects)
+- `GOOGLE_GENERATIVE_AI_API_KEY` — Google Gemini API key for `/api/chat`
+- `DATABASE_URL` — PostgreSQL connection string
+- `BETTER_AUTH_*` / `GOOGLE_CLIENT_*` — authentication
+- `STRIPE_*` — payments
+
+For an existing database with Portuguese seed data, run:
+
+```bash
+psql $DATABASE_URL -f prisma/scripts/migrate-data-to-english.sql
+```
+
 ## Getting Started
 
 First, run the development server:

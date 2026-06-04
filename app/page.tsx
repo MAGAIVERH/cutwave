@@ -71,7 +71,7 @@ const Home = async () => {
         <div className="relative h-120 w-full overflow-hidden rounded-2xl lg:h-72">
           <Image
             src={banner4}
-            alt="Agende agora!"
+            alt="Book now!"
             fill
             className="object-cover"
             priority
@@ -80,7 +80,7 @@ const Home = async () => {
 
         {bookings.length > 0 && (
           <PageSection>
-            <PageSectionTitle>Agendamentos</PageSectionTitle>
+            <PageSectionTitle>Appointments</PageSectionTitle>
 
             <PageSectionScroller>
               {bookings.map((booking) => (
@@ -91,7 +91,7 @@ const Home = async () => {
         )}
 
         <PageSection>
-          <PageSectionTitle>Recomendados</PageSectionTitle>
+          <PageSectionTitle>Recommended</PageSectionTitle>
           <PageSectionScroller>
             {recomendedBarbershops.map((barbershop) => (
               <BarbershopItem key={barbershop.id} barbershop={barbershop} />
@@ -100,7 +100,7 @@ const Home = async () => {
         </PageSection>
 
         <PageSection>
-          <PageSectionTitle>Populares</PageSectionTitle>
+          <PageSectionTitle>Popular</PageSectionTitle>
           <PageSectionScroller>
             {popularBarbershops.map((barbershop) => (
               <BarbershopItem key={barbershop.id} barbershop={barbershop} />

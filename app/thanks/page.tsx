@@ -91,18 +91,18 @@ export default function ThankYouPage() {
         </motion.div>
 
         <h1 className="text-foreground text-center text-3xl font-bold">
-          Pagamento confirmado!
+          Payment confirmed!
         </h1>
 
         <p className="text-muted-foreground text-center leading-relaxed">
-          Sua reserva foi criada com sucesso.
+          Your booking was created successfully.
           <br />
-          Obrigado por escolher nossos serviços!
+          Thank you for choosing our services!
         </p>
 
         <Link href="/appointments" className="w-full">
           <Button className="text-primary-foreground w-full rounded-2xl py-6 text-lg">
-            Ver meus agendamentos
+            View my appointments
           </Button>
         </Link>
       </motion.div>

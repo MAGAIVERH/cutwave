@@ -16,14 +16,14 @@ type AuthSectionProps = {
 const AuthSection = ({ session, isPending }: AuthSectionProps) => {
   const { closeAuthSheet } = useAuthUI();
   if (isPending) {
-    return <p className="text-muted-foreground text-sm">Carregando...</p>;
+    return <p className="text-muted-foreground text-sm">Loading...</p>;
   }
 
   if (!session) {
     return (
       <>
         <p className="text-muted-foreground text-sm font-bold">
-          Olá. Faça seu login!
+          Hello. Sign in to continue!
         </p>
 
         <Button

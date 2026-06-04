@@ -51,12 +51,12 @@ const BookingDetailsSheet = ({
         throw new Error();
       }
 
-      toast.success("Reserva cancelada com sucesso.");
+      toast.success("Booking cancelled successfully.");
 
       onOpenChange(false); // fecha o sheet (mesmo comportamento do Voltar)
       router.refresh(); // FORÇA atualizar a page
     } catch {
-      toast.error("Não foi possível cancelar a reserva.");
+      toast.error("Could not cancel the booking.");
     } finally {
       setIsCancelling(false);
     }
@@ -67,7 +67,7 @@ const BookingDetailsSheet = ({
       <SheetContent side="right" className="flex h-full w-[80%] p-0">
         {/* HEADER */}
         <div className="border-b px-5 py-4">
-          <SheetTitle>Informações da Reserva</SheetTitle>
+          <SheetTitle>Booking details</SheetTitle>
           {/* <h2 className="text-sm font-semibold">Informações da Reserva</h2> */}
         </div>
 
@@ -79,7 +79,7 @@ const BookingDetailsSheet = ({
               <div className="relative h-36 w-full overflow-hidden rounded-xl">
                 <Image
                   src={mapImage}
-                  alt="Mapa"
+                  alt="Map"
                   fill
                   className="object-cover"
                   priority
@@ -115,7 +115,7 @@ const BookingDetailsSheet = ({
           <PageSection>
             {/* BADGE */}
 
-            <Badge className="mb-2 w-fit">Confirmado</Badge>
+            <Badge className="mb-2 w-fit">Confirmed</Badge>
 
             {/* CARD */}
             <div className="space-y-3 rounded-xl border p-4 text-sm">
@@ -124,10 +124,10 @@ const BookingDetailsSheet = ({
                 <span>{booking.service.name}</span>
                 <span>
                   {(booking.service.priceInCents / 100).toLocaleString(
-                    "pt-BR",
+                    "en-US",
                     {
                       style: "currency",
-                      currency: "BRL",
+                      currency: "USD",
                     },
                   )}
                 </span>
@@ -135,9 +135,9 @@ const BookingDetailsSheet = ({
 
               {/* DATA */}
               <div className="text-muted-foreground flex justify-between">
-                <span>Data</span>
+                <span>Date</span>
                 <span>
-                  {booking.date.toLocaleDateString("pt-BR", {
+                  {booking.date.toLocaleDateString("en-US", {
                     day: "2-digit",
                     month: "long",
                   })}
@@ -146,9 +146,9 @@ const BookingDetailsSheet = ({
 
               {/* HORÁRIO */}
               <div className="text-muted-foreground flex justify-between">
-                <span>Horário</span>
+                <span>Time</span>
                 <span>
-                  {booking.date.toLocaleTimeString("pt-BR", {
+                  {booking.date.toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -157,7 +157,7 @@ const BookingDetailsSheet = ({
 
               {/* BARBEARIA */}
               <div className="text-muted-foreground flex justify-between">
-                <span>Barbearia</span>
+                <span>Barbershop</span>
                 <span>{booking.barbershop.name}</span>
               </div>
             </div>
@@ -165,7 +165,7 @@ const BookingDetailsSheet = ({
 
           {/* CONTATOS */}
           <PageSection>
-            <PageSectionTitle>Contato</PageSectionTitle>
+            <PageSectionTitle>Contact</PageSectionTitle>
 
             {booking.barbershop.phones.map((phone) => (
               <div
@@ -191,7 +191,7 @@ const BookingDetailsSheet = ({
             className="w-1/2 rounded-2xl"
             onClick={() => onOpenChange(false)}
           >
-            Voltar
+            Back
           </Button>
 
           <Button
@@ -200,7 +200,7 @@ const BookingDetailsSheet = ({
             onClick={handleCancel}
             disabled={isCancelling}
           >
-            {isCancelling ? "Cancelando..." : "Cancelar Reserva"}
+            {isCancelling ? "Cancelling..." : "Cancel booking"}
           </Button>
         </div>
       </SheetContent>

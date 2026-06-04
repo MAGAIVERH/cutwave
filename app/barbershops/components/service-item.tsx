@@ -37,13 +37,13 @@ const ServiceItem = ({ service }: ServiceItemProps) => {
         <p className="text-muted-foreground text-xs">{service.description}</p>
 
         <p className="text-foreground mt-1 text-sm font-semibold">
-          R$ {(service.priceInCents / 100).toFixed(2)}
+          ${(service.priceInCents / 100).toFixed(2)}
         </p>
       </div>
 
       {/* BOTÃO – ABRI SHEET DE SERVA DE HORARIOS */}
       <Button variant="default" onClick={() => setOpen(true)}>
-        Reservar
+        Book
       </Button>
 
       <ReserveSheet
