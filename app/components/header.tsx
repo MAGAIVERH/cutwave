@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import {
   Calendar,
   Droplets,
@@ -17,15 +18,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// ✅ CONTEXTO (novo)
 import { useAuthUI } from "@/app/context/auth-ui-context";
 import { Button } from "@/components/ui/button";
-// ✅ layout do projeto
-import {
-  PageContainer,
-  PageSection,
-  PageSectionTitle,
-} from "@/components/ui/page";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -34,21 +28,47 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import { CATEGORY_SLUGS, type CategorySlug } from "@/lib/search-categories";
 import { authClient } from "@/lib/auth-client";
 
 import AuthSection from "../authentication/AuthSection";
 
+const NAV_LINKS = [
+  { href: "/", label: "Home", icon: Home },
+  { href: "/appointments", label: "Appointments", icon: Calendar },
+] as const;
+
+const CATEGORY_ITEMS: {
+  slug: CategorySlug;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { slug: "cabelo", label: CATEGORY_SLUGS.cabelo.label, icon: Scissors },
+  { slug: "barba", label: CATEGORY_SLUGS.barba.label, icon: Slice },
+  { slug: "acabamento", label: CATEGORY_SLUGS.acabamento.label, icon: Sparkles },
+  { slug: "sobrancelha", label: CATEGORY_SLUGS.sobrancelha.label, icon: Eye },
+  { slug: "massagem", label: CATEGORY_SLUGS.massagem.label, icon: HandHeart },
+  { slug: "hidratacao", label: CATEGORY_SLUGS.hidratacao.label, icon: Droplets },
+];
+
+const menuNavLinkClass =
+  "hover:text-accent flex items-center gap-2 text-sm transition-colors max-lg:py-0.5";
+
+const menuCategoryButtonClass =
+  "hover:text-accent flex w-full items-center gap-2 text-left text-sm transition-colors max-lg:py-0.5";
+
 const Header = () => {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-
-  // ✅ CONTROLE EXTERNO DO SHEET
   const { isOpen, setOpen } = useAuthUI();
 
-  const handleFilter = (value: string) => {
-    setOpen(false); // fecha o menu
+  const handleFilter = (value: CategorySlug) => {
+    setOpen(false);
     router.push(`/search?query=${value}`);
   };
+
+  const closeMenu = () => setOpen(false);
 
   return (
     <header className="flex w-full items-center justify-between px-5 pt-7 lg:mx-auto lg:max-w-6xl">
@@ -62,7 +82,6 @@ const Header = () => {
           </Link>
         </Button>
 
-        {/* ✅ Sheet AGORA CONTROLADO */}
         <Sheet open={isOpen} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
@@ -72,123 +91,108 @@ const Header = () => {
 
           <SheetContent
             side="right"
-            className="flex h-full w-[70%] flex-col p-0"
+            className={cn(
+              "flex h-full flex-col gap-0 p-0 sm:max-w-none",
+              "w-[70%] max-lg:max-w-[min(320px,85vw)]",
+              "lg:w-[min(32rem,42vw)] lg:max-w-[32rem]",
+            )}
           >
-            <SheetHeader className="p-5 pb-0">
-              <SheetTitle>Menu</SheetTitle>
+            <SheetHeader className="border-border/60 space-y-1 border-b px-5 pt-6 pb-5 lg:px-8">
+              <SheetTitle className="text-lg tracking-tight lg:text-xl">
+                Menu
+              </SheetTitle>
+              <p className="text-muted-foreground hidden text-sm lg:block">
+                Browse services and manage your bookings
+              </p>
             </SheetHeader>
 
-            <div className="px-5">
-              <Separator />
+            <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto">
+              <div className="space-y-6 px-5 py-6 lg:space-y-8 lg:px-8 lg:py-8">
+                {/* Auth */}
+                <section
+                  className={cn(
+                    "max-lg:flex max-lg:items-center max-lg:justify-between max-lg:gap-3",
+                    "lg:bg-muted/35 lg:border-border/60 lg:flex lg:flex-col lg:gap-4 lg:rounded-2xl lg:border lg:p-5",
+                    "lg:[&_button]:w-full lg:[&_button]:justify-center",
+                  )}
+                >
+                  <AuthSection session={session} isPending={isPending} />
+                </section>
+
+                {/* Primary nav */}
+                <section className="space-y-3">
+                  <p className="text-muted-foreground hidden text-[11px] font-semibold tracking-widest uppercase lg:block">
+                    Navigation
+                  </p>
+                  <nav
+                    className={cn(
+                      "space-y-3 text-sm",
+                      "lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0",
+                    )}
+                  >
+                    {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={closeMenu}
+                        className={cn(
+                          menuNavLinkClass,
+                          "lg:hover:border-primary/25 lg:hover:bg-muted/60 lg:border-border/60 lg:bg-background lg:flex lg:rounded-xl lg:border lg:px-4 lg:py-3.5 lg:transition-all",
+                        )}
+                      >
+                        <span className="lg:bg-primary/10 lg:text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg lg:rounded-md">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="lg:font-medium">{label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </section>
+
+                <Separator className="max-lg:block lg:hidden" />
+
+                {/* Categories */}
+                <section className="space-y-3">
+                  <p
+                    className={cn(
+                      "text-foreground text-xs font-bold uppercase",
+                      "lg:text-muted-foreground lg:text-[11px] lg:tracking-widest",
+                    )}
+                  >
+                    Categories
+                  </p>
+                  <div
+                    className={cn(
+                      "space-y-3",
+                      "lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0",
+                    )}
+                  >
+                    {CATEGORY_ITEMS.map(({ slug, label, icon: Icon }) => (
+                      <button
+                        key={slug}
+                        type="button"
+                        onClick={() => handleFilter(slug)}
+                        className={cn(
+                          menuCategoryButtonClass,
+                          "lg:hover:border-primary/25 lg:hover:bg-muted/60 lg:group lg:border-border/60 lg:bg-background lg:rounded-xl lg:border lg:p-3.5 lg:transition-all",
+                        )}
+                      >
+                        <span className="lg:bg-primary/10 lg:group-hover:bg-primary/15 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors">
+                          <Icon className="text-foreground lg:text-primary h-4 w-4" />
+                        </span>
+                        <span className="lg:font-medium">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              </div>
             </div>
 
-            <PageContainer className="scrollbar-hide flex-1 overflow-y-auto">
-              {/* LOGIN / USER */}
-              <PageSection>
-                <div className="flex items-center justify-between rounded-lg">
-                  <AuthSection session={session} isPending={isPending} />
-                </div>
-              </PageSection>
-
-              {/* MENU */}
-              <PageSection>
-                <nav className="space-y-3 text-sm">
-                  <Link
-                    href="/"
-                    onClick={() => setOpen(false)}
-                    className="hover:text-accent flex items-center gap-2 text-sm transition-colors"
-                  >
-                    <Home className="h-4 w-4" />
-                    <span>Home</span>
-                  </Link>
-
-                  <Link
-                    href="/appointments"
-                    onClick={() => setOpen(false)}
-                    className="hover:text-accent flex items-center gap-2 text-sm transition-colors"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    <span>Appointments</span>
-                  </Link>
-                </nav>
-              </PageSection>
-
-              <Separator />
-
-              {/* CATEGORIAS */}
-              <PageSection>
-                <PageSectionTitle>Categories</PageSectionTitle>
-
-                <button
-                  onClick={() => handleFilter("cabelo")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <Scissors className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Hair
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleFilter("barba")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <Slice className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Beard
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleFilter("acabamento")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <Sparkles className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Finish
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleFilter("sobrancelha")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <Eye className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Eyebrows
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleFilter("massagem")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <HandHeart className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Massage
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleFilter("hidratacao")}
-                  className="hover:text-accent flex w-full items-center gap-2 text-left transition-colors"
-                >
-                  <Droplets className="hover:text-accent h-4 w-4 transition-colors" />
-                  <span className="hover:text-accent transition-colors">
-                    Hydration
-                  </span>
-                </button>
-              </PageSection>
-
-              <Separator />
-            </PageContainer>
-
-            {/* LOGOUT */}
-
             {session && (
-              <div className="p-5">
+              <div className="border-border/60 border-t px-5 py-5 lg:px-8">
                 <Button
-                  className="justify-start rounded-2xl text-sm"
+                  variant="outline"
+                  className="w-full justify-center rounded-xl text-sm lg:h-11"
                   onClick={() => authClient.signOut()}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
