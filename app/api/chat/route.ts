@@ -4,21 +4,33 @@ import { cookies } from "next/headers";
 import z from "zod";
 
 import {
+  buildDateClarificationMessage,
+  buildPastDateToolPayload,
+  buildSmartDateAlternatives,
   checkoutUIMessageStreamResponse,
   errorUIMessageStreamResponse,
   extractPendingBooking,
   formatIsoDateUs,
   getAppBaseUrl,
   getChatTodayContext,
+  getConfirmedDateFromMessages,
   getLastUserText,
+  isAffirmativeReply,
   isConfirmCommand,
   isIsoDateBeforeToday,
+  isLikelyDateMessage,
   isValidIsoDate,
   loginRequiredUIMessageStreamResponse,
+  normalizeToolDateInput,
   parseIsoDateOnly,
+  parseUserDateInput,
   sliceChatMessagesForApi,
-  suggestUpcomingIsoDates,
+  textUIMessageStreamResponse,
 } from "@/lib/chat-utils";
+import {
+  getDayAvailability,
+  validateBookingSlot,
+} from "@/lib/booking-availability";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -32,7 +44,17 @@ async function fetchJson(url: string, options?: RequestInit) {
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || "Request failed");
+    try {
+      const json = JSON.parse(text) as { error?: string; message?: string };
+      throw new Error(
+        json.message || json.error || text || "Request failed",
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message !== text) {
+        throw error;
+      }
+      throw new Error(text || "Request failed");
+    }
   }
   return res.json();
 }
@@ -81,6 +103,16 @@ export const POST = async (request: Request) => {
         );
       }
 
+      const slotCheck = await validateBookingSlot(prisma, {
+        userId: session.user.id,
+        serviceId: booking.serviceId,
+        appointmentDate: new Date(booking.date),
+      });
+
+      if (!slotCheck.ok) {
+        return errorUIMessageStreamResponse(slotCheck.userMessage);
+      }
+
       try {
         const response = await fetchJson(
           `${baseUrl}/api/stripe/create-booking-checkout-session`,
@@ -115,10 +147,44 @@ export const POST = async (request: Request) => {
     }
 
     const { today, isoDate, todayUs } = getChatTodayContext();
-    const suggestedDates = suggestUpcomingIsoDates(5).map((d) => ({
-      iso: d,
-      label: formatIsoDateUs(d),
-    }));
+
+    if (isLikelyDateMessage(userText)) {
+      const parsedUserDate = parseUserDateInput(userText);
+      if (parsedUserDate && isIsoDateBeforeToday(parsedUserDate, isoDate)) {
+        const clarification = buildDateClarificationMessage(
+          parsedUserDate,
+          isoDate,
+        );
+        if (clarification) {
+          return textUIMessageStreamResponse(clarification);
+        }
+      }
+    }
+
+    const confirmedDate = isAffirmativeReply(userText)
+      ? getConfirmedDateFromMessages(
+          messages as Parameters<typeof getConfirmedDateFromMessages>[0],
+        )
+      : null;
+
+    const userDateContext = confirmedDate
+      ? `
+USER CONFIRMED DATE: ${confirmedDate} (${formatIsoDateUs(confirmedDate)})
+Call getAvailableTimeSlotsForBarbershop with date=${confirmedDate} immediately, then list available times.
+`
+      : isLikelyDateMessage(userText)
+        ? (() => {
+            const parsed = parseUserDateInput(userText);
+            if (!parsed) return "";
+            const alt = buildSmartDateAlternatives(parsed, isoDate);
+            return `
+USER DATE INPUT (parsed): ${parsed} (${formatIsoDateUs(parsed)})
+Status: ${isIsoDateBeforeToday(parsed, isoDate) ? "PAST — do not book this date" : "VALID"}
+${alt.likelyIntent ? `Recommended match: ${alt.likelyIntent.iso} (${alt.likelyIntent.label}) — ${alt.likelyIntent.note}` : ""}
+${alt.assistantHint}
+`;
+          })()
+        : "";
 
     const result = streamText({
       model: google(CHAT_MODEL),
@@ -136,12 +202,14 @@ DATE RULES (CRITICAL)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - TODAY (${isoDate}) is the only source of truth for "today".
-- Compare booking dates as YYYY-MM-DD strings against TODAY.
-- A date is in the past only if it is strictly BEFORE ${isoDate} (not equal).
-- Example: ${isoDate} means 06/04/${isoDate.slice(0, 4)} — 05/10/${isoDate.slice(0, 4)} is in the past; 06/10/${isoDate.slice(0, 4)} is valid.
-- Always call getAvailableTimeSlotsForBarbershop to validate dates; relay tool errors clearly.
-- If a date is in the past, explain using MM/DD/YYYY and suggest: ${suggestedDates.map((d) => d.label).join(", ")} (ISO: ${suggestedDates.map((d) => d.iso).join(", ")}).
-- Ask for dates in YYYY-MM-DD format and confirm the month (05 = May, 06 = June).
+- Accept natural language dates (e.g. "may 10, 2026") and normalize to YYYY-MM-DD before tools.
+- If the user gives a past date, ALWAYS:
+  1. Repeat the date they asked for (e.g. May 10).
+  2. Offer the same day number in the current month first (e.g. June 10 if they said May 10).
+  3. Ask "Did you mean [recommended date]?" — do NOT only list unrelated dates.
+- When the user replies "yes" to a date clarification, use the recommended ISO date and call getAvailableTimeSlotsForBarbershop.
+- Use tool suggestedDates; prioritize entries with recommended: true.
+${userDateContext}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LANGUAGE (CRITICAL)
@@ -214,11 +282,24 @@ After this summary:
 - Only wait for the user
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AVAILABILITY RULES (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- NEVER invent time slots. Only show times returned by tools.
+- ALWAYS call getAvailableTimeSlotsForBarbershop after barbershop, service, and date are known.
+- If fullyBooked is true, say the barbershop has no openings that day and ask for another date.
+- If a time has USER_BOOKING_CONFLICT, explain the user already has another appointment at that time (another barbershop) — they cannot book two places at the same date and time.
+- If a time has TIME_SLOT_UNAVAILABLE, that slot is taken at this barbershop — pick another time from availableTimeSlots.
+- Before showing the booking summary, call validateSelectedBookingSlot with the exact date and time.
+- If validateSelectedBookingSlot returns available: false, do NOT show the payment summary; help the user pick another slot.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TOOLS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - searchBarbershops: find barbershops in the database
-- getAvailableTimeSlotsForBarbershop: find available time slots
+- getAvailableTimeSlotsForBarbershop: real availability (includes user conflicts at other barbershops)
+- validateSelectedBookingSlot: verify barbershop + service + date + time before the summary
 
 Always show real options from the database.
 When calling getAvailableTimeSlotsForBarbershop, use exact serviceId values from searchBarbershops results.
@@ -267,32 +348,27 @@ When calling getAvailableTimeSlotsForBarbershop, use exact serviceId values from
         }),
         execute: async ({ barbershopId, serviceId, date }) => {
           try {
-            if (!isValidIsoDate(date)) {
+            const normalizedDate = normalizeToolDateInput(date, userText);
+            const resolvedDate = isValidIsoDate(normalizedDate)
+              ? normalizedDate
+              : parseUserDateInput(normalizedDate) ?? normalizedDate;
+
+            if (!isValidIsoDate(resolvedDate)) {
               return {
                 error: "INVALID_DATE_FORMAT",
                 message:
-                  "Use a valid date in YYYY-MM-DD format (example: 2026-06-10).",
+                  'I could not read that date. Try "June 10, 2026" or 2026-06-10.',
                 today: isoDate,
                 todayFormatted: todayUs,
+                examples: ["2026-06-10", "june 10 2026"],
               };
             }
 
-            if (isIsoDateBeforeToday(date, isoDate)) {
-              return {
-                error: "PAST_DATE",
-                message: `${formatIsoDateUs(date)} is before today (${todayUs}). Please pick today or a future date.`,
-                requestedDate: date,
-                requestedDateFormatted: formatIsoDateUs(date),
-                today: isoDate,
-                todayFormatted: todayUs,
-                suggestedDates: suggestUpcomingIsoDates(5).map((d) => ({
-                  iso: d,
-                  label: formatIsoDateUs(d),
-                })),
-              };
+            if (isIsoDateBeforeToday(resolvedDate, isoDate)) {
+              return buildPastDateToolPayload(resolvedDate, isoDate);
             }
 
-            const parsed = parseIsoDateOnly(date);
+            const parsed = parseIsoDateOnly(resolvedDate);
             if (!parsed) {
               return {
                 error: "INVALID_DATE",
@@ -300,32 +376,114 @@ When calling getAvailableTimeSlotsForBarbershop, use exact serviceId values from
               };
             }
 
-            const timestamp = parsed.getTime();
-
-            const booked: string[] = await fetchJson(
-              `${baseUrl}/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}`,
-            );
-
-            const allSlots: string[] = [];
-            for (let h = 9; h < 19; h++) {
-              allSlots.push(`${String(h).padStart(2, "0")}:00`);
-              allSlots.push(`${String(h).padStart(2, "0")}:30`);
-            }
-
-            const available = allSlots.filter((s) => !booked.includes(s));
+            const availability = await getDayAvailability(prisma, {
+              userId: session.user.id,
+              barbershopId,
+              serviceId,
+              dateIso: resolvedDate,
+            });
 
             return {
+              ...availability,
               availableTimeSlots:
-                available.length > 0
-                  ? available
+                availability.availableTimeSlots.length > 0
+                  ? availability.availableTimeSlots
                   : ["No time slots available on this date"],
             };
           } catch (error) {
             console.error("Time slots error:", error);
             return {
               availableTimeSlots: ["Could not check availability"],
+              error: "AVAILABILITY_CHECK_FAILED",
             };
           }
+        },
+      }),
+
+      validateSelectedBookingSlot: tool({
+        description:
+          "Validate barbershop, service, date and time before showing the booking summary",
+        inputSchema: z.object({
+          barbershopId: z.string(),
+          serviceId: z.string(),
+          date: z.string().describe("Date YYYY-MM-DD"),
+          time: z.string().describe("Time HH:MM"),
+        }),
+        execute: async ({ barbershopId, serviceId, date, time }) => {
+          const normalizedDate = normalizeToolDateInput(date, userText);
+          const dateIso = isValidIsoDate(normalizedDate)
+            ? normalizedDate
+            : parseUserDateInput(normalizedDate);
+
+          const timeMatch = time.trim().match(/^(\d{1,2}):(\d{2})$/);
+
+          if (!dateIso || !isValidIsoDate(dateIso) || !timeMatch) {
+            return {
+              available: false,
+              error: "INVALID_INPUT",
+              message: "Use date YYYY-MM-DD and time HH:MM (example: 10:00).",
+            };
+          }
+
+          const hours = Number(timeMatch[1]);
+          const minutes = Number(timeMatch[2]);
+          const slot = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+
+          const dayAvailability = await getDayAvailability(prisma, {
+            userId: session.user.id,
+            barbershopId,
+            serviceId,
+            dateIso,
+          });
+
+          const appointmentDay = parseIsoDateOnly(dateIso)!;
+          appointmentDay.setHours(hours, minutes, 0, 0);
+
+          if (!dayAvailability.availableTimeSlots.includes(slot)) {
+            const blocked = dayAvailability.unavailableSlots.find(
+              (s) => s.time === slot,
+            );
+
+            if (blocked?.reason === "USER_BOOKING_CONFLICT") {
+              return {
+                available: false,
+                error: "USER_BOOKING_CONFLICT",
+                message:
+                  `You already have an appointment at **${slot}** at **${blocked.existingBarbershop}** (${blocked.existingService}). Choose another time.`,
+                availableTimeSlots: dayAvailability.availableTimeSlots,
+              };
+            }
+
+            return {
+              available: false,
+              error: blocked?.reason ?? "TIME_SLOT_UNAVAILABLE",
+              message:
+                `**${slot}** is not available on ${dayAvailability.dateFormatted}. Pick one of: ${dayAvailability.availableTimeSlots.join(", ") || "none — try another date"}.`,
+              availableTimeSlots: dayAvailability.availableTimeSlots,
+            };
+          }
+
+          const validation = await validateBookingSlot(prisma, {
+            userId: session.user.id,
+            serviceId,
+            appointmentDate: appointmentDay,
+          });
+
+          if (!validation.ok) {
+            return {
+              available: false,
+              error: validation.error,
+              message: validation.userMessage,
+              availableTimeSlots: dayAvailability.availableTimeSlots,
+            };
+          }
+
+          return {
+            available: true,
+            message: `Slot ${slot} on ${dayAvailability.dateFormatted} is available. You may show the booking summary.`,
+            date: dayAvailability.date,
+            time: slot,
+          };
         },
       }),
       },

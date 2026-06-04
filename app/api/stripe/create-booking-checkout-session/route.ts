@@ -3,6 +3,7 @@ import { enUS } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+import { validateBookingSlot } from "@/lib/booking-availability";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -34,11 +35,20 @@ export async function POST(req: Request) {
     }
 
     const parsedDate = new Date(date);
-    const start = parsedDate;
-    const end = new Date(parsedDate);
-    end.setMinutes(end.getMinutes() + 30);
 
-    // Buscar serviço
+    const validation = await validateBookingSlot(prisma, {
+      userId,
+      serviceId,
+      appointmentDate: parsedDate,
+    });
+
+    if (!validation.ok) {
+      return NextResponse.json(
+        { error: validation.error, message: validation.userMessage },
+        { status: 409 },
+      );
+    }
+
     const service = await prisma.barbershopService.findUnique({
       where: { id: serviceId },
       include: { barbershop: true },
@@ -49,38 +59,6 @@ export async function POST(req: Request) {
     }
 
     const barbershopId = service.barbershopId;
-
-    // 🔍 VALIDAR CONFLITOS (NÃO MEXER)
-    const userConflict = await prisma.booking.findFirst({
-      where: {
-        userId,
-        cancelled: false,
-        date: { gte: start, lt: end },
-      },
-    });
-
-    if (userConflict) {
-      return NextResponse.json(
-        { error: "USER_BOOKING_CONFLICT" },
-        { status: 409 },
-      );
-    }
-
-    const serviceConflict = await prisma.booking.findFirst({
-      where: {
-        barbershopId,
-        serviceId,
-        cancelled: false,
-        date: { gte: start, lt: end },
-      },
-    });
-
-    if (serviceConflict) {
-      return NextResponse.json(
-        { error: "TIME_SLOT_UNAVAILABLE" },
-        { status: 409 },
-      );
-    }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 

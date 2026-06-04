@@ -3,6 +3,8 @@ import { enUS } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { authClient } from "@/lib/auth-client";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +65,8 @@ export const ReserveSheet = ({
   servicePrice,
   barbershopName,
 }: ReserveSheetProps) => {
+  const { data: session } = authClient.useSession();
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
@@ -131,8 +135,12 @@ export const ReserveSheet = ({
       // usamos timestamp para evitar problema de fuso
       const timestamp = selectedDate.getTime();
 
+      const userQuery = session?.user?.id
+        ? `&userId=${encodeURIComponent(session.user.id)}`
+        : "";
+
       const response = await fetch(
-        `/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}`,
+        `/api/bookings?barbershopId=${barbershopId}&serviceId=${serviceId}&timestamp=${timestamp}${userQuery}`,
       );
 
       if (!response.ok) {
@@ -150,7 +158,7 @@ export const ReserveSheet = ({
     };
 
     fetchBookedHours();
-  }, [selectedDate, barbershopId, serviceId, selectedHour]);
+  }, [selectedDate, barbershopId, serviceId, selectedHour, session?.user?.id]);
 
   /* CONFIRMAR RESERVA */
   // const handleConfirm = async () => {
@@ -229,8 +237,20 @@ export const ReserveSheet = ({
       if (response.status === 409) {
         const data = await response.json();
         if (data?.error === "USER_BOOKING_CONFLICT") {
-          setConflictInfo(data.conflict);
+          setConflictInfo(data.conflict ?? null);
           setIsConflictDialogOpen(true);
+          toast.error(
+            data.message ??
+              "You already have an appointment at this time.",
+          );
+          return;
+        }
+
+        if (data?.error === "TIME_SLOT_UNAVAILABLE") {
+          toast.error(
+            data.message ?? "This time slot is no longer available.",
+          );
+          setSelectedHour(null);
           return;
         }
       }
