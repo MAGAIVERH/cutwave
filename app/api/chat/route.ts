@@ -12,6 +12,12 @@ import {
 } from "@/lib/chat-utils";
 import { prisma } from "@/lib/prisma";
 
+/** gemini-2.0-flash free tier often hits quota limit:0; 2.5-flash works on the same key */
+const CHAT_MODEL =
+  process.env.GOOGLE_GENERATIVE_AI_MODEL ?? "gemini-2.5-flash";
+
+export const maxDuration = 60;
+
 async function fetchJson(url: string, options?: RequestInit) {
   const res = await fetch(url, options);
   if (!res.ok) {
@@ -21,50 +27,70 @@ async function fetchJson(url: string, options?: RequestInit) {
   return res.json();
 }
 
+function filterChatMessages(messages: unknown[]): unknown[] {
+  if (!Array.isArray(messages)) return [];
+  return messages.filter(
+    (m) =>
+      m &&
+      typeof m === "object" &&
+      (m as { role?: string }).role !== "system",
+  );
+}
+
 export const POST = async (request: Request) => {
-  const { messages } = await request.json();
-  const baseUrl = getAppBaseUrl(request);
-  const userText = getLastUserText(messages);
-
-  if (isConfirmCommand(userText)) {
-    const cookieStore = await cookies();
-
-    try {
-      const response = await fetchJson(
-        `${baseUrl}/api/stripe/create-booking-checkout-session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            cookie: cookieStore.toString(),
-          },
-          body: JSON.stringify({ origin: "chat" }),
-        },
-      );
-
-      return checkoutUIMessageStreamResponse(response.url);
-    } catch (error) {
-      console.error("Checkout error:", error);
-
+  try {
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       return errorUIMessageStreamResponse(
-        "Sorry, we could not start checkout. Please try again or contact support.",
+        "Chat is not configured. Set GOOGLE_GENERATIVE_AI_API_KEY in your environment.",
       );
     }
-  }
 
-  const today = new Date().toLocaleDateString("en-US", {
+    const body = await request.json();
+    const messages = filterChatMessages(body.messages ?? []);
+    const baseUrl = getAppBaseUrl(request);
+    const userText = getLastUserText(
+      messages as Parameters<typeof getLastUserText>[0],
+    );
+
+    if (isConfirmCommand(userText)) {
+      const cookieStore = await cookies();
+
+      try {
+        const response = await fetchJson(
+          `${baseUrl}/api/stripe/create-booking-checkout-session`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              cookie: cookieStore.toString(),
+            },
+            body: JSON.stringify({ origin: "chat" }),
+          },
+        );
+
+        return checkoutUIMessageStreamResponse(response.url);
+      } catch (error) {
+        console.error("Checkout error:", error);
+
+        return errorUIMessageStreamResponse(
+          "Sorry, we could not start checkout. Please try again or contact support.",
+        );
+      }
+    }
+
+    const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-  const isoDate = new Date().toISOString().split("T")[0];
+    const isoDate = new Date().toISOString().split("T")[0];
 
-  const result = streamText({
-    model: google("gemini-2.0-flash"),
-    stopWhen: stepCountIs(12),
+    const result = streamText({
+      model: google(CHAT_MODEL),
+      stopWhen: stepCountIs(12),
 
-    system: `
+      system: `
 You are CutWave Assistant, a virtual barbershop booking assistant.
 
 TODAY: ${today} (${isoDate})
@@ -140,9 +166,11 @@ TOOLS
 Always show real options from the database.
 `,
 
-    messages: convertToModelMessages(messages),
+      messages: convertToModelMessages(
+        messages as Parameters<typeof convertToModelMessages>[0],
+      ),
 
-    tools: {
+      tools: {
       searchBarbershops: tool({
         description: "Search barbershops in the database",
         inputSchema: z.object({
@@ -209,8 +237,18 @@ Always show real options from the database.
           }
         },
       }),
-    },
-  });
+      },
+    });
 
-  return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("Chat route error:", error);
+    const message =
+      error instanceof Error ? error.message : "Unexpected chat error";
+    return errorUIMessageStreamResponse(
+      message.includes("quota") || message.includes("Quota")
+        ? "AI quota exceeded. Try again in a minute or switch GOOGLE_GENERATIVE_AI_MODEL to gemini-2.5-flash in .env."
+        : `Chat error: ${message}`,
+    );
+  }
 };

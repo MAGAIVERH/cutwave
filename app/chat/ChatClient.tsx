@@ -204,8 +204,8 @@ export default function ChatClient() {
         ))}
         {error && (
           <div className="border-destructive/30 bg-destructive/10 text-destructive mx-4 mt-4 rounded-xl border p-3 text-sm">
-            Something went wrong. Check your connection and API keys, then try
-            again.
+            {error.message ||
+              "Something went wrong. Check your connection and API keys, then try again."}
           </div>
         )}
         <div ref={messagesEndRef} />
