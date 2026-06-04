@@ -11,7 +11,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChatInput } from "./components/chat-input";
 import { ChatMessage } from "./components/chat-message";
 
-const STORAGE_KEY = "cutwave.chat.v1";
+const STORAGE_KEY = "cutwave.chat.v2";
+const MAX_API_MESSAGES = 12;
+
+const chatTransport = new DefaultChatTransport({
+  api: "/api/chat",
+  prepareSendMessagesRequest: ({ messages, trigger, messageId, body }) => ({
+    body: {
+      ...body,
+      messages: messages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .slice(-MAX_API_MESSAGES),
+      trigger,
+      messageId,
+    },
+  }),
+});
 
 const INITIAL_MESSAGES: UIMessage[] = [
   {
@@ -80,7 +95,7 @@ export default function ChatClient() {
   }, []);
 
   const { messages, setMessages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
+    transport: chatTransport,
     onError: (err) => {
       console.error("Chat error:", err);
     },

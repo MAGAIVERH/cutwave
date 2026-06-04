@@ -6,9 +6,11 @@ import z from "zod";
 import {
   checkoutUIMessageStreamResponse,
   errorUIMessageStreamResponse,
+  extractPendingBooking,
   getAppBaseUrl,
   getLastUserText,
   isConfirmCommand,
+  sliceChatMessagesForApi,
 } from "@/lib/chat-utils";
 import { prisma } from "@/lib/prisma";
 
@@ -46,7 +48,11 @@ export const POST = async (request: Request) => {
     }
 
     const body = await request.json();
-    const messages = filterChatMessages(body.messages ?? []);
+    const messages = sliceChatMessagesForApi(
+      filterChatMessages(body.messages ?? []) as Parameters<
+        typeof sliceChatMessagesForApi
+      >[0],
+    );
     const baseUrl = getAppBaseUrl(request);
     const userText = getLastUserText(
       messages as Parameters<typeof getLastUserText>[0],
@@ -54,6 +60,13 @@ export const POST = async (request: Request) => {
 
     if (isConfirmCommand(userText)) {
       const cookieStore = await cookies();
+      const booking = extractPendingBooking(messages);
+
+      if (!booking) {
+        return errorUIMessageStreamResponse(
+          "I could not find your booking details. Please choose barbershop, service, date, and time, then type confirm again.",
+        );
+      }
 
       try {
         const response = await fetchJson(
@@ -64,7 +77,11 @@ export const POST = async (request: Request) => {
               "Content-Type": "application/json",
               cookie: cookieStore.toString(),
             },
-            body: JSON.stringify({ origin: "chat" }),
+            body: JSON.stringify({
+              origin: "chat",
+              serviceId: booking.serviceId,
+              date: booking.date,
+            }),
           },
         );
 
@@ -94,6 +111,15 @@ export const POST = async (request: Request) => {
 You are CutWave Assistant, a virtual barbershop booking assistant.
 
 TODAY: ${today} (${isoDate})
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LANGUAGE (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Always respond in English only.
+- Do not use Portuguese, Spanish, or mixed language.
+- If the user writes in another language, understand it but reply in English.
+- Use US date format (MM/DD/YYYY) and USD ($) in summaries and prices.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CRITICAL RULES
@@ -164,6 +190,7 @@ TOOLS
 - getAvailableTimeSlotsForBarbershop: find available time slots
 
 Always show real options from the database.
+When calling getAvailableTimeSlotsForBarbershop, use exact serviceId values from searchBarbershops results.
 `,
 
       messages: convertToModelMessages(

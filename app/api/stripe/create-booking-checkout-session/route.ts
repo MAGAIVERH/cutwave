@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -109,10 +110,10 @@ export async function POST(req: Request) {
       line_items: [
         {
           price_data: {
-            currency: "brl",
+            currency: "usd",
             unit_amount: service.priceInCents,
             product_data: {
-              name: `${service.barbershop.name} - ${service.name} em ${format(parsedDate, "dd/MM/yyyy HH:mm")}`,
+              name: `${service.barbershop.name} - ${service.name} on ${format(parsedDate, "MMM d, yyyy 'at' h:mm a", { locale: enUS })}`,
               description: service.description,
               images: [service.imageUrl],
             },
