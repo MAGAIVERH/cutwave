@@ -78,11 +78,6 @@ const BarbershopPage = async ({
           sizes="(max-width: 1024px) 100vw, 1152px"
           className="object-cover lg:object-[center_30%]"
         />
-
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-14 bg-linear-to-t from-background via-background/60 to-transparent lg:block"
-          aria-hidden
-        />
       </div>
 
       <PageContainer className="lg:pt-4">
