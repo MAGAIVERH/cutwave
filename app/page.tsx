@@ -4,6 +4,7 @@ import Image from "next/image";
 import {
   PageContainer,
   PageSection,
+  PageSectionGrid,
   PageSectionScroller,
   PageSectionTitle,
 } from "@/components/ui/page";
@@ -64,16 +65,14 @@ const Home = async () => {
       <Header />
       <PageContainer>
         <SearchInput />
-        <PageSectionScroller>
-          <SearchQuickFilters />
-        </PageSectionScroller>
+        <SearchQuickFilters />
 
-        <div className="relative h-120 w-full overflow-hidden rounded-2xl lg:h-72">
+        <div className="relative h-120 w-full overflow-hidden rounded-2xl lg:aspect-[21/9] lg:h-auto">
           <Image
             src={banner4}
             alt="Book now!"
             fill
-            className="object-cover"
+            className="object-cover lg:object-[center_35%]"
             priority
           />
         </div>
@@ -92,20 +91,20 @@ const Home = async () => {
 
         <PageSection>
           <PageSectionTitle>Recommended</PageSectionTitle>
-          <PageSectionScroller>
+          <PageSectionGrid>
             {recomendedBarbershops.map((barbershop) => (
               <BarbershopItem key={barbershop.id} barbershop={barbershop} />
             ))}
-          </PageSectionScroller>
+          </PageSectionGrid>
         </PageSection>
 
         <PageSection>
           <PageSectionTitle>Popular</PageSectionTitle>
-          <PageSectionScroller>
+          <PageSectionGrid>
             {popularBarbershops.map((barbershop) => (
               <BarbershopItem key={barbershop.id} barbershop={barbershop} />
             ))}
-          </PageSectionScroller>
+          </PageSectionGrid>
         </PageSection>
       </PageContainer>
 

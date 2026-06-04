@@ -36,7 +36,7 @@ const BarbershopItem = ({ barbershop }: BarbershopItemProps) => {
   return (
     <div
       onClick={handleClick}
-      className="relative min-h-[200px] min-w-[340px] cursor-pointer overflow-hidden rounded-xl max-md:shrink-0 md:min-w-0 md:w-full"
+      className="relative min-h-[200px] min-w-[340px] max-lg:shrink-0 cursor-pointer overflow-hidden rounded-xl lg:aspect-[5/3] lg:min-h-[200px] lg:w-full lg:min-w-0"
     >
       <div className="absolute inset-0 z-10 bg-linear-to-t from-black/70 to-transparent" />
 

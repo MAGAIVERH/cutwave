@@ -28,13 +28,25 @@ export const PageSection = ({ children }: { children: React.ReactNode }) => {
   return <div className="space-y-3">{children}</div>;
 };
 
+/** Horizontal carousel (bookings, etc.). Desktop keeps the same scroll row. */
 export const PageSectionScroller = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
   return (
-    <div className="scrollbar-hide flex gap-4 overflow-x-auto lg:grid lg:grid-cols-2 lg:overflow-visible xl:grid-cols-3">
+    <div className="scrollbar-hide flex gap-4 overflow-x-auto">{children}</div>
+  );
+};
+
+/** Barbershop lists: carousel on mobile, auto-fill grid on desktop (lg+). */
+export const PageSectionGrid = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className="scrollbar-hide flex gap-4 overflow-x-auto lg:grid lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] lg:gap-4 lg:overflow-visible">
       {children}
     </div>
   );

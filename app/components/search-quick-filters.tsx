@@ -27,7 +27,7 @@ const SearchQuickFilters = () => {
   };
 
   return (
-    <div className="flex gap-3">
+    <div className="scrollbar-hide flex gap-3 overflow-x-auto lg:grid lg:w-full lg:grid-cols-6 lg:gap-3 lg:overflow-visible">
       {filters.map((item) => {
         const Icon = item.icon;
 
@@ -35,7 +35,7 @@ const SearchQuickFilters = () => {
           <Button
             key={item.value}
             onClick={() => handleFilter(item.value)}
-            className="group bg-muted text-foreground border-border hover:bg-accent flex items-center gap-2 rounded-full border px-4 py-2 shadow-sm transition-colors hover:border-transparent"
+            className="group bg-muted text-foreground border-border hover:bg-accent flex shrink-0 items-center justify-center gap-2 rounded-full border px-4 py-2 shadow-sm transition-colors hover:border-transparent lg:w-full"
           >
             <Icon
               size={16}
