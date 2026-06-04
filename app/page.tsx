@@ -24,11 +24,13 @@ const Home = async () => {
     orderBy: {
       name: "asc",
     },
+    take: 9,
   });
   const popularBarbershops = await prisma.barbershop.findMany({
     orderBy: {
       name: "desc",
     },
+    take: 9,
   });
   const session = await auth.api.getSession({
     headers: new Headers(await headers()),
