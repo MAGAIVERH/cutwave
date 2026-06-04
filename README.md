@@ -10,7 +10,13 @@ Copy `.env.example` to `.env.local` and fill in the values:
 - `BETTER_AUTH_*` / `GOOGLE_CLIENT_*` — authentication
 - `STRIPE_*` — payments
 
-For an existing database with Portuguese seed data, run:
+For an existing database with Portuguese seed data (barbershop names on cards, services, etc.), run:
+
+```bash
+pnpm db:migrate-en
+```
+
+Or with SQL directly:
 
 ```bash
 psql $DATABASE_URL -f prisma/scripts/migrate-data-to-english.sql
