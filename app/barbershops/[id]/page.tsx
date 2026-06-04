@@ -63,7 +63,7 @@ const BarbershopPage = async ({
   return (
     <main>
       {/* TOP IMAGE  */}
-      <div className="relative h-64 w-full overflow-hidden rounded-b-2xl lg:mx-auto lg:mt-4 lg:aspect-[5/3] lg:h-auto lg:max-w-6xl lg:rounded-2xl">
+      <div className="relative h-64 w-full overflow-hidden rounded-b-2xl lg:mx-auto lg:mt-4 lg:h-56 lg:max-w-6xl lg:rounded-2xl">
         <Link
           href="/"
           className="bg-background/80 absolute top-4 left-4 z-20 rounded-full p-2 backdrop-blur-md"
@@ -75,11 +75,17 @@ const BarbershopPage = async ({
           src={barbershop.imageUrl}
           alt={barbershop.name}
           fill
-          className="object-cover lg:object-[center_35%]"
+          sizes="(max-width: 1024px) 100vw, 1152px"
+          className="object-cover lg:object-[center_30%]"
+        />
+
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-14 bg-linear-to-t from-background via-background/60 to-transparent lg:block"
+          aria-hidden
         />
       </div>
 
-      <PageContainer>
+      <PageContainer className="lg:pt-4">
         {/* TÍTULO --- */}
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
